@@ -1,0 +1,218 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Microsoft YaHei', '微软雅黑', sans-serif;
+    background-color: #f5f5f5;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 20px;
+}
+
+.container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    max-width: 100%;
+}
+
+.envelope {
+    position: relative;
+    width: 300px;
+    height: 200px;
+    background-color: transparent;
+    cursor: pointer;
+    perspective: 1000px;
+    margin-bottom: 30px;
+}
+
+.front, .back, .top-flap, .bottom-flap, .left-flap, .right-flap {
+    position: absolute;
+    transition: all 0.8s ease;
+}
+
+.front {
+    width: 100%;
+    height: 100%;
+    background-color: #e74c3c;
+    transform-origin: center;
+    z-index: 5;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 5px;
+}
+
+.front::before {
+    content: '❤';
+    font-size: 32px;
+    color: white;
+}
+
+.back {
+    width: 100%;
+    height: 100%;
+    background-color: #c0392b;
+    transform: translateZ(-1px);
+    z-index: 1;
+    border-radius: 5px;
+}
+
+.top-flap {
+    width: 100%;
+    height: 50%;
+    background-color: #d35400;
+    transform-origin: top;
+    transform: rotateX(0deg);
+    z-index: 4;
+    top: 0;
+    border-radius: 5px 5px 0 0;
+}
+
+.bottom-flap {
+    width: 100%;
+    height: 50%;
+    background-color: #d35400;
+    transform-origin: bottom;
+    transform: rotateX(0deg);
+    z-index: 3;
+    bottom: 0;
+    border-radius: 0 0 5px 5px;
+}
+
+.left-flap {
+    width: 50%;
+    height: 100%;
+    background-color: #e67e22;
+    transform-origin: left;
+    transform: rotateY(0deg);
+    z-index: 2;
+    left: 0;
+    border-radius: 5px 0 0 5px;
+}
+
+.right-flap {
+    width: 50%;
+    height: 100%;
+    background-color: #e67e22;
+    transform-origin: right;
+    transform: rotateY(0deg);
+    z-index: 2;
+    right: 0;
+    border-radius: 0 5px 5px 0;
+}
+
+.card {
+    position: absolute;
+    width: 90%;
+    height: 90%;
+    background-color: #fff;
+    border-radius: 3px;
+    z-index: 0;
+    top: 5%;
+    left: 5%;
+    overflow: hidden;
+    transform: translateZ(-10px) scale(0.7);
+    transition: transform 0.8s ease;
+    padding: 20px;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+}
+
+.card-content {
+    opacity: 0;
+    transition: opacity 1s ease 0.5s;
+    text-align: center;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.card-content h2 {
+    margin-bottom: 15px;
+    color: #e74c3c;
+}
+
+.card-content p {
+    margin-bottom: 10px;
+    line-height: 1.6;
+    color: #333;
+}
+
+.signature {
+    margin-top: 15px;
+    font-style: italic;
+    text-align: right;
+    color: #e74c3c;
+}
+
+.envelope.open .front {
+    transform: rotateX(180deg);
+}
+
+.envelope.open .top-flap {
+    transform: rotateX(-180deg);
+}
+
+.envelope.open .bottom-flap {
+    transform: rotateX(180deg);
+}
+
+.envelope.open .left-flap {
+    transform: rotateY(-180deg);
+}
+
+.envelope.open .right-flap {
+    transform: rotateY(180deg);
+}
+
+.envelope.open .card {
+    transform: translateZ(0) scale(1);
+    z-index: 6;
+}
+
+.envelope.open .card-content {
+    opacity: 1;
+}
+
+.instructions {
+    margin-top: 20px;
+    color: #555;
+    font-size: 16px;
+    text-align: center;
+}
+
+.share-button {
+    margin-top: 30px;
+}
+
+#shareButton {
+    padding: 10px 20px;
+    background-color: #3498db;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    box-shadow: 0 3px 5px rgba(0, 0, 0, 0.2);
+    transition: all 0.3s ease;
+}
+
+#shareButton:hover {
+    background-color: #2980b9;
+}
+
+@media (max-width: 400px) {
+    .envelope {
+        width: 250px;
+        height: 170px;
+    }
+} 

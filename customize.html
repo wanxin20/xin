@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>自定义你的情书</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Microsoft YaHei', '微软雅黑', sans-serif;
+            background-color: #f5f5f5;
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #e74c3c;
+            margin: 20px 0;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        input[type="text"], textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-family: inherit;
+            font-size: 16px;
+        }
+        
+        textarea {
+            height: 100px;
+            resize: vertical;
+        }
+        
+        .color-picker {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .color-option {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid transparent;
+        }
+        
+        .color-option.selected {
+            border-color: #333;
+        }
+        
+        .buttons {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 30px;
+        }
+        
+        button {
+            padding: 10px 20px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            box-shadow: 0 3px 5px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+        }
+        
+        button:hover {
+            background-color: #2980b9;
+        }
+        
+        #previewButton {
+            background-color: #2ecc71;
+        }
+        
+        #previewButton:hover {
+            background-color: #27ae60;
+        }
+        
+        #resetButton {
+            background-color: #e74c3c;
+        }
+        
+        #resetButton:hover {
+            background-color: #c0392b;
+        }
+        
+        .paragraphs-container {
+            margin-top: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 15px;
+            background-color: white;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .paragraph-item {
+            background-color: #f9f9f9;
+            border-radius: 5px;
+            padding: 10px;
+            margin-bottom: 10px;
+            position: relative;
+        }
+        
+        .paragraph-item p {
+            margin-bottom: 10px;
+        }
+        
+        .paragraph-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .paragraph-actions button {
+            padding: 5px 10px;
+            font-size: 12px;
+        }
+        
+        .remove-paragraph {
+            background-color: #e74c3c;
+        }
+        
+        .remove-paragraph:hover {
+            background-color: #c0392b;
+        }
+        
+        .edit-paragraph {
+            background-color: #f39c12;
+        }
+        
+        .edit-paragraph:hover {
+            background-color: #d35400;
+        }
+        
+        .add-paragraph-btn {
+            background-color: #2ecc71;
+            margin-top: 10px;
+        }
+        
+        .add-paragraph-btn:hover {
+            background-color: #27ae60;
+        }
+        
+        .mode-toggle {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 1px dashed #ddd;
+            padding-bottom: 20px;
+        }
+        
+        .toggle-btn {
+            display: inline-block;
+            padding: 10px 20px;
+            margin: 0 10px;
+            background-color: #f5f5f5;
+            color: #333;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        
+        .toggle-btn.active {
+            background-color: #e74c3c;
+            color: white;
+            border-color: #c0392b;
+        }
+        
+        .book-preview {
+            width: 100%;
+            height: 200px;
+            background-color: #fff8f8;
+            border-radius: 5px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            margin-top: 20px;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            perspective: 1000px;
+        }
+        
+        .book-cover {
+            width: 70%;
+            height: 90%;
+            background-color: #e74c3c;
+            border-radius: 5px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            text-align: center;
+            padding: 20px;
+            position: relative;
+            box-shadow: 5px 5px 15px rgba(0, 0, 0, 0.2);
+            transform: perspective(800px) rotateY(15deg);
+            transition: transform 0.5s ease, box-shadow 0.5s ease;
+            transform-style: preserve-3d;
+        }
+        
+        .book-cover:hover {
+            transform: perspective(800px) rotateY(5deg) translateY(-5px);
+            box-shadow: 8px 10px 20px rgba(0, 0, 0, 0.3);
+        }
+        
+        .book-cover::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url('data:image/png;base64,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');
+            opacity: 0.08;
+            pointer-events: none;
+            border-radius: 5px;
+        }
+        
+        .book-preview-title {
+            font-size: 24px;
+            margin-bottom: 10px;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+        }
+        
+        .book-spine {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 10px;
+            height: 100%;
+            background-color: #c0392b;
+            border-radius: 2px 0 0 2px;
+            box-shadow: inset -2px 0 3px rgba(0, 0, 0, 0.2);
+        }
+        
+        .book-pages {
+            position: absolute;
+            top: 5%;
+            right: -5px;
+            width: 10px;
+            height: 90%;
+            background-color: #fff;
+            border-radius: 0 2px 2px 0;
+            box-shadow: 1px 0 3px rgba(0, 0, 0, 0.2);
+        }
+        
+        .book-pages::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: repeating-linear-gradient(
+                to bottom,
+                #f5f5f5,
+                #f5f5f5 2px,
+                #fff 2px,
+                #fff 4px
+            );
+            opacity: 0.5;
+            border-radius: 0 2px 2px 0;
+        }
+        
+        .book-decoration {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+        }
+        
+        .book-shine {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, 
+                rgba(255,255,255,0.3) 0%, 
+                rgba(255,255,255,0) 50%, 
+                rgba(255,255,255,0) 100%);
+            opacity: 0.7;
+            border-radius: 5px;
+        }
+        
+        .book-bookmark {
+            position: absolute;
+            top: -8px;
+            right: 30px;
+            width: 20px;
+            height: 50px;
+            background-color: #f1c40f;
+            border-radius: 0 0 10px 10px;
+            transform: rotate(-5deg);
+            box-shadow: 1px 2px 3px rgba(0, 0, 0, 0.2);
+            z-index: 10;
+        }
+        
+        .tip-box {
+            background-color: #fffce6;
+            border-left: 4px solid #ffd24c;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 0 5px 5px 0;
+        }
+        
+        .tip-title {
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #e67e22;
+        }
+    </style>
+</head>
+<body>
+    <h1>定制翻页情书</h1>
+    
+    <div class="mode-toggle">
+        <div class="toggle-btn active" id="bookModeBtn">书籍样式</div>
+    </div>
+    
+    <div class="tip-box">
+        <div class="tip-title">创建提示</div>
+        <p>这是一本特别的书籍式情书，将您的内容添加为一页一页的书籍，带有精美的翻页效果。每页将展示一段内容，您可以添加多个段落创造一本完整的爱情小书。</p>
+    </div>
+    
+    <div class="book-preview">
+        <div class="book-cover" id="bookCoverPreview">
+            <div class="book-spine"></div>
+            <div class="book-pages"></div>
+            <div class="book-decoration">
+                <div class="book-shine"></div>
+                <div class="book-bookmark"></div>
+            </div>
+            <h3 class="book-preview-title">心动情书</h3>
+            <p>献给特别的你</p>
+        </div>
+    </div>
+    
+    <div class="form-group">
+        <label for="recipient">收信人</label>
+        <input type="text" id="recipient" placeholder="例如：亲爱的朋友">
+    </div>
+    
+    <div class="form-group">
+        <label for="currentParagraph">编写段落内容</label>
+        <textarea id="currentParagraph" placeholder="写下这一段的内容..."></textarea>
+        <button id="addParagraphBtn" class="add-paragraph-btn">添加此段落</button>
+    </div>
+    
+    <div class="form-group">
+        <label>已添加的段落</label>
+        <div class="paragraphs-container" id="paragraphsContainer">
+            <!-- 段落会动态添加到这里 -->
+        </div>
+    </div>
+    
+    <div class="form-group">
+        <label for="signature">署名</label>
+        <input type="text" id="signature" placeholder="例如：爱你的朋友">
+    </div>
+    
+    <div class="form-group">
+        <label>情书颜色</label>
+        <div class="color-picker" id="envelopeColors">
+            <div class="color-option selected" style="background-color: #e74c3c;" data-color="#e74c3c"></div>
+            <div class="color-option" style="background-color: #9b59b6;" data-color="#9b59b6"></div>
+            <div class="color-option" style="background-color: #3498db;" data-color="#3498db"></div>
+            <div class="color-option" style="background-color: #2ecc71;" data-color="#2ecc71"></div>
+            <div class="color-option" style="background-color: #f1c40f;" data-color="#f1c40f"></div>
+            <div class="color-option" style="background-color: #e67e22;" data-color="#e67e22"></div>
+        </div>
+    </div>
+    
+    <div class="buttons">
+        <button id="previewButton">预览情书</button>
+        <button id="generateButton">生成链接</button>
+        <button id="resetButton">重置</button>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const colorOptions = document.querySelectorAll('.color-option');
+            const previewButton = document.getElementById('previewButton');
+            const generateButton = document.getElementById('generateButton');
+            const resetButton = document.getElementById('resetButton');
+            const addParagraphBtn = document.getElementById('addParagraphBtn');
+            const paragraphsContainer = document.getElementById('paragraphsContainer');
+            const currentParagraph = document.getElementById('currentParagraph');
+            const bookModeBtn = document.getElementById('bookModeBtn');
+            const bookCoverPreview = document.getElementById('bookCoverPreview');
+            
+            // 存储所有段落
+            let paragraphs = [];
+            let editingIndex = -1;
+            let useBookMode = true; // 默认使用书籍模式
+            
+            // 颜色选择
+            colorOptions.forEach(option => {
+                option.addEventListener('click', function() {
+                    colorOptions.forEach(opt => opt.classList.remove('selected'));
+                    this.classList.add('selected');
+                    updateBookPreview();
+                });
+            });
+            
+            // 更新书籍预览
+            function updateBookPreview() {
+                const color = document.querySelector('.color-option.selected').getAttribute('data-color');
+                bookCoverPreview.style.backgroundColor = color;
+                bookCoverPreview.querySelector('.book-spine').style.backgroundColor = adjustColor(color, -30);
+                
+                const recipient = document.getElementById('recipient').value || '特别的你';
+                if (recipient.length > 0) {
+                    bookCoverPreview.querySelector('.book-preview-title').textContent = '献给 ' + recipient;
+                }
+            }
+            
+            // 调整颜色亮度的辅助函数
+            function adjustColor(color, percent) {
+                let R = parseInt(color.substring(1, 3), 16);
+                let G = parseInt(color.substring(3, 5), 16);
+                let B = parseInt(color.substring(5, 7), 16);
+
+                R = Math.max(0, Math.min(255, R + percent));
+                G = Math.max(0, Math.min(255, G + percent));
+                B = Math.max(0, Math.min(255, B + percent));
+
+                const RR = ((R.toString(16).length === 1) ? "0" + R.toString(16) : R.toString(16));
+                const GG = ((G.toString(16).length === 1) ? "0" + G.toString(16) : G.toString(16));
+                const BB = ((B.toString(16).length === 1) ? "0" + B.toString(16) : B.toString(16));
+
+                return "#" + RR + GG + BB;
+            }
+            
+            // 添加段落
+            addParagraphBtn.addEventListener('click', function() {
+                const paragraphText = currentParagraph.value.trim();
+                if (paragraphText) {
+                    if (editingIndex >= 0) {
+                        // 更新现有段落
+                        paragraphs[editingIndex] = paragraphText;
+                        editingIndex = -1;
+                        addParagraphBtn.textContent = '添加此段落';
+                    } else {
+                        // 添加新段落
+                        paragraphs.push(paragraphText);
+                    }
+                    
+                    currentParagraph.value = '';
+                    renderParagraphs();
+                }
+            });
+            
+            // 渲染所有段落
+            function renderParagraphs() {
+                paragraphsContainer.innerHTML = '';
+                
+                if (paragraphs.length === 0) {
+                    paragraphsContainer.innerHTML = '<p style="color: #888; text-align: center;">还没有添加段落，请在上方编写并添加</p>';
+                    return;
+                }
+                
+                paragraphs.forEach((paragraph, index) => {
+                    const paragraphItem = document.createElement('div');
+                    paragraphItem.className = 'paragraph-item';
+                    
+                    const paragraphText = document.createElement('p');
+                    paragraphText.textContent = paragraph;
+                    paragraphItem.appendChild(paragraphText);
+                    
+                    const paragraphActions = document.createElement('div');
+                    paragraphActions.className = 'paragraph-actions';
+                    
+                    const editButton = document.createElement('button');
+                    editButton.className = 'edit-paragraph';
+                    editButton.textContent = '编辑';
+                    editButton.addEventListener('click', function() {
+                        currentParagraph.value = paragraph;
+                        editingIndex = index;
+                        addParagraphBtn.textContent = '保存修改';
+                        currentParagraph.focus();
+                    });
+                    
+                    const removeButton = document.createElement('button');
+                    removeButton.className = 'remove-paragraph';
+                    removeButton.textContent = '删除';
+                    removeButton.addEventListener('click', function() {
+                        paragraphs.splice(index, 1);
+                        renderParagraphs();
+                    });
+                    
+                    const moveUpButton = document.createElement('button');
+                    moveUpButton.textContent = '上移';
+                    moveUpButton.style.display = index > 0 ? 'block' : 'none';
+                    moveUpButton.addEventListener('click', function() {
+                        if (index > 0) {
+                            [paragraphs[index-1], paragraphs[index]] = [paragraphs[index], paragraphs[index-1]];
+                            renderParagraphs();
+                        }
+                    });
+                    
+                    const moveDownButton = document.createElement('button');
+                    moveDownButton.textContent = '下移';
+                    moveDownButton.style.display = index < paragraphs.length - 1 ? 'block' : 'none';
+                    moveDownButton.addEventListener('click', function() {
+                        if (index < paragraphs.length - 1) {
+                            [paragraphs[index], paragraphs[index+1]] = [paragraphs[index+1], paragraphs[index]];
+                            renderParagraphs();
+                        }
+                    });
+                    
+                    paragraphActions.appendChild(editButton);
+                    paragraphActions.appendChild(removeButton);
+                    paragraphActions.appendChild(moveUpButton);
+                    paragraphActions.appendChild(moveDownButton);
+                    
+                    paragraphItem.appendChild(paragraphActions);
+                    paragraphsContainer.appendChild(paragraphItem);
+                });
+            }
+            
+            // 初始化空段落显示
+            renderParagraphs();
+            
+            // 同步收信人到书籍封面
+            document.getElementById('recipient').addEventListener('input', function() {
+                updateBookPreview();
+            });
+            
+            // 预览功能
+            previewButton.addEventListener('click', function() {
+                if (paragraphs.length === 0) {
+                    alert('请至少添加一段内容再预览！');
+                    return;
+                }
+                
+                const recipient = document.getElementById('recipient').value || '亲爱的朋友';
+                const signature = document.getElementById('signature').value || '爱你的朋友';
+                const selectedColor = document.querySelector('.color-option.selected').getAttribute('data-color');
+                
+                // 创建预览窗口
+                localStorage.setItem('letterData', JSON.stringify({
+                    recipient,
+                    paragraphs,
+                    signature,
+                    color: selectedColor,
+                    preview: true,
+                    bookMode: useBookMode,
+                    autoOpen: true
+                }));
+                
+                window.open('index.html?preview=true', '_blank');
+            });
+            
+            // 生成链接
+            generateButton.addEventListener('click', function() {
+                if (paragraphs.length === 0) {
+                    alert('请至少添加一段内容再生成链接！');
+                    return;
+                }
+                
+                const recipient = document.getElementById('recipient').value || '亲爱的朋友';
+                const signature = document.getElementById('signature').value || '爱你的朋友';
+                const selectedColor = document.querySelector('.color-option.selected').getAttribute('data-color');
+                
+                // 编码数据用于URL参数
+                const data = encodeURIComponent(JSON.stringify({
+                    recipient,
+                    paragraphs,
+                    signature,
+                    color: selectedColor,
+                    bookMode: useBookMode
+                }));
+                
+                const url = `${window.location.origin}${window.location.pathname.replace('customize.html', 'index.html')}?data=${data}`;
+                
+                // 复制链接到剪贴板
+                const tempInput = document.createElement('input');
+                document.body.appendChild(tempInput);
+                tempInput.value = url;
+                tempInput.select();
+                document.execCommand('copy');
+                document.body.removeChild(tempInput);
+                
+                alert('链接已复制到剪贴板，可以分享给朋友了！');
+            });
+            
+            // 重置功能
+            resetButton.addEventListener('click', function() {
+                if (confirm('确定要重置所有内容吗？')) {
+                    document.getElementById('recipient').value = '';
+                    document.getElementById('currentParagraph').value = '';
+                    document.getElementById('signature').value = '';
+                    paragraphs = [];
+                    renderParagraphs();
+                    colorOptions.forEach(opt => opt.classList.remove('selected'));
+                    colorOptions[0].classList.add('selected');
+                    editingIndex = -1;
+                    addParagraphBtn.textContent = '添加此段落';
+                    updateBookPreview();
+                }
+            });
+            
+            // 初始化
+            updateBookPreview();
+        });
+    </script>
+</body>
+</html> 
