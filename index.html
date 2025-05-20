@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>情书</title>
     <link rel="stylesheet" href="styles.css">
     <style>
@@ -484,22 +484,48 @@
         
         @media (max-width: 768px) {
             .book-container {
-                height: 450px;
+                height: 100vh;
+                max-height: 100vh;
+                width: 100%;
+                max-width: 100%;
+                margin: 0;
+                padding: 0;
+            }
+            
+            .book {
+                height: 100%;
+                width: 100%;
+            }
+            
+            .page {
+                width: 100%;
+                height: 100%;
+                border-radius: 0;
+            }
+            
+            .first-page, .last-page {
+                width: 100%;
+                height: 100%;
+                border-radius: 0;
+                padding: 20px;
             }
             
             .page-front, .page-back {
                 padding: 25px 30px;
+                height: 100%;
+                width: 100%;
+                box-sizing: border-box;
             }
             
             .page-content h2 {
                 font-size: 20px;
-                max-width: 400px;
+                max-width: 100%;
                 margin-bottom: 15px;
             }
             
             .page-content p {
                 font-size: 14px;
-                max-width: 400px;
+                max-width: 100%;
             }
             
             .signature {
@@ -511,11 +537,20 @@
                 bottom: 10px;
                 font-size: 11px;
             }
+            
+            .book-navigation {
+                position: fixed;
+                bottom: 20px;
+                left: 0;
+                width: 100%;
+                z-index: 1000;
+            }
         }
         
         @media (max-width: 480px) {
             .book-container {
-                height: 340px;
+                height: 100vh;
+                max-height: 100vh;
             }
             
             .page-front, .page-back {
@@ -534,14 +569,14 @@
             
             .page-content h2 {
                 font-size: 18px;
-                max-width: 280px;
+                max-width: 100%;
                 margin-bottom: 12px;
             }
             
             .page-content p {
                 font-size: 13px;
                 line-height: 1.6;
-                max-width: 280px;
+                max-width: 100%;
             }
             
             .page-decoration {
@@ -571,6 +606,19 @@
             
             .page-back .page-number {
                 left: 15px;
+            }
+            
+            .envelope {
+                width: 100%;
+                height: auto;
+                aspect-ratio: 1.5;
+                margin: 20px 0;
+            }
+            
+            .card {
+                width: calc(100% - 40px);
+                max-height: calc(100vh - 150px);
+                overflow-y: auto;
             }
         }
     </style>

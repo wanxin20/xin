@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>精准倒计时</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Microsoft YaHei', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(45deg, #3498db, #8e44ad);
+            color: white;
+            overflow: hidden;
+        }
+        
+        .container {
+            text-align: center;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .timer {
+            font-size: 3.5rem;
+            margin: 20px 0;
+            background: rgba(0, 0, 0, 0.2);
+            padding: 20px 40px;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            display: inline-block;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .timer::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, 
+                rgba(255, 255, 255, 0.1) 0%, 
+                rgba(255, 255, 255, 0.2) 50%, 
+                rgba(255, 255, 255, 0.1) 100%);
+            transform: translateX(-100%);
+            animation: shine 3s infinite;
+        }
+        
+        @keyframes shine {
+            100% {
+                transform: translateX(100%);
+            }
+        }
+        
+        h1 {
+            font-size: 2rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        
+        .controls {
+            margin-top: 30px;
+        }
+        
+        button {
+            background-color: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            padding: 12px 24px;
+            margin: 0 10px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            outline: none;
+        }
+        
+        button:hover {
+            background-color: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        .input-time {
+            margin-top: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 15px;
+            border-radius: 10px;
+            display: inline-block;
+        }
+        
+        .input-time label {
+            margin: 0 10px;
+        }
+        
+        .input-time input {
+            width: 60px;
+            padding: 8px;
+            border: none;
+            border-radius: 5px;
+            text-align: center;
+            margin: 0 5px;
+            font-size: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>精准倒计时</h1>
+        <div class="timer" id="timer">52.0分钟：13.14秒</div>
+        
+        <div class="controls">
+            <button id="startBtn">开始</button>
+            <button id="pauseBtn">暂停</button>
+            <button id="resetBtn">重置</button>
+        </div>
+        
+        <div class="input-time">
+            <label>
+                分钟：
+                <input type="number" id="minutesInput" min="0" max="999" value="52" step="any">
+            </label>
+            <label>
+                秒：
+                <input type="number" id="secondsInput" min="0" max="59" value="13.14" step="0.01">
+            </label>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 获取DOM元素
+            const timerDisplay = document.getElementById('timer');
+            const startBtn = document.getElementById('startBtn');
+            const pauseBtn = document.getElementById('pauseBtn');
+            const resetBtn = document.getElementById('resetBtn');
+            const minutesInput = document.getElementById('minutesInput');
+            const secondsInput = document.getElementById('secondsInput');
+            
+            let countdown; // 存储requestAnimationFrame的ID
+            let totalMilliseconds = 0; // 总毫秒数
+            let isRunning = false; // 计时器是否运行中
+            let lastTimestamp; // 上次更新的时间戳
+            
+            // 初始化计时器显示
+            initTimer();
+            
+            // 注册事件监听器
+            startBtn.addEventListener('click', startTimer);
+            pauseBtn.addEventListener('click', pauseTimer);
+            resetBtn.addEventListener('click', resetTimer);
+            
+            // 初始化计时器
+            function initTimer() {
+                // 获取输入值并转换为毫秒
+                const minutes = parseFloat(minutesInput.value) || 0;
+                const seconds = parseFloat(secondsInput.value) || 0;
+                
+                totalMilliseconds = (minutes * 60 + seconds) * 1000;
+                updateDisplay();
+            }
+            
+            // 开始计时器
+            function startTimer() {
+                if (isRunning) return;
+                
+                if (totalMilliseconds <= 0) {
+                    initTimer();
+                }
+                
+                // 确保开始前正确初始化总毫秒数
+                if (totalMilliseconds === 0) {
+                    const minutes = parseFloat(minutesInput.value) || 0;
+                    const seconds = parseFloat(secondsInput.value) || 0;
+                    if (minutes === 0 && seconds === 0) {
+                        // 如果时间为0，不启动计时器
+                        return;
+                    }
+                    totalMilliseconds = (minutes * 60 + seconds) * 1000;
+                }
+                
+                isRunning = true;
+                lastTimestamp = Date.now();
+                
+                // 使用requestAnimationFrame而不是setInterval，以获得更高的精度
+                countdown = requestAnimationFrame(updateTimer);
+            }
+            
+            // 更新计时器显示（根据实际经过的时间，而不是固定间隔）
+            function updateTimer() {
+                if (!isRunning) return;
+                
+                const now = Date.now();
+                const elapsed = now - lastTimestamp;
+                lastTimestamp = now;
+                
+                totalMilliseconds -= elapsed;
+                
+                // 确保不会出现负数，但只有在真正到0时才停止
+                if (totalMilliseconds <= 0) {
+                    totalMilliseconds = 0;
+                    updateDisplay();
+                    playEndSound(); // 播放结束提示音
+                    pauseTimer();
+                    return;
+                }
+                
+                updateDisplay();
+                countdown = requestAnimationFrame(updateTimer);
+            }
+            
+            // 更新显示
+            function updateDisplay() {
+                const totalSeconds = totalMilliseconds / 1000;
+                const minutes = Math.floor(totalSeconds / 60);
+                const seconds = totalSeconds % 60;
+                
+                // 格式化为 "52.0分钟：13.14秒"
+                // 使用toFixed(1)和toFixed(2)会进行四舍五入，可能导致显示不准确
+                // 改用自定义格式化方法确保精确显示
+                const formattedMinutes = formatDecimal(minutes, 1);
+                const formattedSeconds = formatDecimal(seconds, 2);
+                
+                timerDisplay.textContent = `${formattedMinutes}分钟：${formattedSeconds}秒`;
+            }
+            
+            // 自定义格式化小数方法，避免四舍五入问题
+            function formatDecimal(value, decimals) {
+                // 对于接近0的极小值，直接显示0
+                if (Math.abs(value) < 0.001 && decimals <= 2) {
+                    return decimals === 1 ? "0.0" : "0.00";
+                }
+                
+                // 处理负数情况
+                const sign = value < 0 ? "-" : "";
+                const absValue = Math.abs(value);
+                
+                // 分离整数和小数部分
+                const intPart = Math.floor(absValue);
+                const fractPart = absValue - intPart;
+                
+                // 格式化小数部分，截断而非四舍五入
+                const fractStr = fractPart.toString().substr(2);
+                const paddedFract = (fractStr + "0".repeat(decimals)).substr(0, decimals);
+                
+                return `${sign}${intPart}.${paddedFract}`;
+            }
+            
+            // 播放结束提示音
+            function playEndSound() {
+                try {
+                    // 创建音频上下文
+                    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    
+                    // 创建振荡器和增益节点
+                    const oscillator = audioContext.createOscillator();
+                    const gainNode = audioContext.createGain();
+                    
+                    // 设置完成提示音 - 使用上升音调
+                    oscillator.type = 'sine';
+                    oscillator.frequency.setValueAtTime(440, audioContext.currentTime);
+                    oscillator.frequency.exponentialRampToValueAtTime(880, audioContext.currentTime + 0.5);
+                    
+                    // 设置音量包络
+                    gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.8);
+                    
+                    // 连接节点
+                    oscillator.connect(gainNode);
+                    gainNode.connect(audioContext.destination);
+                    
+                    // 播放声音
+                    oscillator.start();
+                    oscillator.stop(audioContext.currentTime + 0.8);
+                } catch (e) {
+                    console.log('提示音播放失败:', e);
+                }
+            }
+            
+            // 暂停计时器
+            function pauseTimer() {
+                if (!isRunning) return;
+                
+                isRunning = false;
+                cancelAnimationFrame(countdown);
+            }
+            
+            // 重置计时器
+            function resetTimer() {
+                pauseTimer();
+                initTimer();
+            }
+        });
+    </script>
+</body>
+</html> 
