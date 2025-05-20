@@ -205,6 +205,30 @@ document.addEventListener('DOMContentLoaded', function() {
         const totalPages = paragraphs.length;
         console.log(`总段落数: ${paragraphs.length}, 总页数: ${totalPages}`);
         
+        // 设置首页内容
+        const firstPage = document.querySelector('.first-page');
+        if (firstPage) {
+            // 更新首页标题
+            const bookTitle = firstPage.querySelector('.book-title');
+            if (bookTitle) bookTitle.textContent = '心动情书';
+            
+            // 更新首页副标题
+            const bookSubtitle = firstPage.querySelector('.book-subtitle');
+            if (bookSubtitle) bookSubtitle.textContent = `献给${recipient}`;
+        }
+        
+        // 设置末页内容
+        const lastPageElement = document.getElementById('lastPage');
+        if (lastPageElement) {
+            lastPageElement.style.display = 'none';
+            // 更新签名
+            const lastPageSignature = lastPageElement.querySelector('.signature');
+            if (lastPageSignature) lastPageSignature.textContent = signature;
+        }
+        
+        // 初始设置currentPage为-1，表示在首页
+        currentPage = -1;
+        
         for (let i = 0; i < totalPages; i++) {
             const page = document.createElement('div');
             page.className = 'page';
@@ -248,126 +272,137 @@ document.addEventListener('DOMContentLoaded', function() {
                 signatureEl.className = 'signature';
                 signatureEl.textContent = signature;
                 pageFront.appendChild(signatureEl);
-                console.log('添加签名到最后一页');
             }
             
-            // 添加装饰
-            const decoration = document.createElement('div');
-            decoration.className = 'page-decoration top-left';
-            pageFront.appendChild(decoration);
-            
-            // 添加波浪装饰
-            const wave = document.createElement('div');
-            wave.className = 'wave-decoration';
-            pageFront.appendChild(wave);
-            
-            // 组装页面 - 只添加正面
             pageContent.appendChild(pageFront);
             page.appendChild(pageContent);
             
-            // 添加到DOM
+            // 初始状态下隐藏此页面
+            page.style.display = 'none';
+            
+            // 将页面添加到书籍容器中
             book.appendChild(page);
             pages.push(page);
+            
+            // 添加翻页点击事件
+            page.addEventListener('click', function(e) {
+                // 防止点击页面内容元素时触发翻页
+                if (e.target.closest('.page-content')) {
+                    return;
+                }
+                
+                if (i < totalPages - 1) {
+                    // 如果不是最后一页，点击进入下一页
+                    this.style.display = 'none';
+                    pages[i + 1].style.display = 'block';
+                    currentPage = i + 1;
+                    updateBookNavigation();
+                } else {
+                    // 如果是最后一页，点击显示结尾页
+                    this.style.display = 'none';
+                    lastPage.style.display = 'flex';
+                    currentPage = pages.length;
+                    updateBookNavigation();
+                }
+                
+                playPageTurnSound();
+            });
         }
         
-        // 更新最后一页
-        lastPage.style.display = 'flex';
-        
-        // 为每个页面添加事件
-        pages.forEach((page, index) => {
-            // 添加点击事件
-            page.addEventListener('click', function() {
-                flipPage(this);
-            });
-            
-            // 添加3D悬停效果
-            page.addEventListener('mousemove', function(e) {
-                if (!this.classList.contains('flipped')) {
-                    const rect = this.getBoundingClientRect();
-                    const x = e.clientX - rect.left; // x在元素内的位置
-                    const y = e.clientY - rect.top;  // y在元素内的位置
-                    
-                    // 计算旋转角度，最大5度
-                    const rotateY = ((x / rect.width) - 0.5) * 5;
-                    const rotateX = ((y / rect.height) - 0.5) * -3;
-                    
-                    // 应用3D转换
-                    this.style.transform = `perspective(1500px) rotateY(${rotateY}deg) rotateX(${rotateX}deg)`;
-                } else {
-                    this.style.transform = 'rotateY(-180deg)';
-                }
-            });
-            
-            // 移出时恢复正常
-            page.addEventListener('mouseleave', function() {
-                if (!this.classList.contains('flipped')) {
-                    this.style.transform = '';
-                } else {
-                    this.style.transform = 'rotateY(-180deg)';
-                }
-            });
-        });
-        
-        // 更新导航按钮
+        // 更新导航按钮状态
         updateBookNavigation();
     }
     
-    // 翻页效果
-    function flipPage(page) {
-        if (!page) return;
-        
-        const index = parseInt(page.dataset.index);
-        const isFlipped = page.classList.contains('flipped');
-        
-        // 播放翻页声音
-        playPageTurnSound();
-        
-        console.log(`翻页: 页面索引 ${index}, 当前状态: ${isFlipped ? '已翻过' : '未翻过'}`);
-        
-        if (isFlipped) {
-            // 如果翻回去，只翻当前这一页
-            page.classList.remove('flipped');
-            setTimeout(() => {
-                page.style.transform = '';
-            }, 50);
-            currentPage = index;
-        } else {
-            // 如果翻过去，只翻当前这一页
-            page.classList.add('flipped');
-            currentPage = index + 1;
-        }
-        
-        updateBookNavigation();
-    }
-    
-    // 切换到上一页
+    // 上一页函数
     function prevPage() {
-        if (currentPage > 0) {
-            playPageTurnSound();
-            pages[currentPage - 1].classList.remove('flipped');
-            pages[currentPage - 1].style.transform = '';
+        if (currentPage > -1) {
+            if (currentPage === pages.length) {
+                // 如果当前是最后一页，返回到最后一个内容页
+                lastPage.style.display = 'none';
+                pages[pages.length - 1].style.display = 'block';
+            } else if (currentPage === 0) {
+                // 如果当前是第一页内容，返回到首页
+                pages[0].style.display = 'none';
+                document.querySelector('.first-page').style.display = 'flex';
+                currentPage = -1;
+                updateBookNavigation();
+                playPageTurnSound();
+                return;
+            } else if (currentPage === -1) {
+                // 如果当前是首页，返回到信封
+                document.querySelector('.first-page').style.display = 'none';
+                envelope.style.display = 'block';
+                instructions.style.display = 'block';
+                bookContainer.style.display = 'none';
+                bookNavigation.style.display = 'none';
+                isOpen = true;
+                return;
+            } else {
+                // 隐藏当前页，显示上一页
+                pages[currentPage].style.display = 'none';
+                pages[currentPage - 1].style.display = 'block';
+            }
+            
             currentPage--;
             updateBookNavigation();
+            playPageTurnSound();
+        } else if (currentPage === -1) {
+            // 如果当前是首页，返回到信封
+            document.querySelector('.first-page').style.display = 'none';
+            envelope.style.display = 'block';
+            instructions.style.display = 'block';
+            bookContainer.style.display = 'none';
+            bookNavigation.style.display = 'none';
+            isOpen = true;
         }
     }
     
-    // 切换到下一页
+    // 下一页函数
     function nextPage() {
         if (currentPage < pages.length) {
-            playPageTurnSound();
-            pages[currentPage].classList.add('flipped');
+            // 隐藏当前页
+            if (currentPage === -1) {
+                // 如果是首页，隐藏首页显示第一页内容
+                document.querySelector('.first-page').style.display = 'none';
+                pages[0].style.display = 'block';
+            } else if (currentPage === pages.length - 1) {
+                // 如果是最后一个内容页，显示结尾页
+                pages[currentPage].style.display = 'none';
+                lastPage.style.display = 'flex';
+            } else {
+                // 常规翻页
+                pages[currentPage].style.display = 'none';
+                pages[currentPage + 1].style.display = 'block';
+            }
+            
             currentPage++;
             updateBookNavigation();
+            playPageTurnSound();
         }
     }
     
     // 更新书籍导航按钮状态
     function updateBookNavigation() {
-        prevBtn.disabled = currentPage === 0;
-        nextBtn.disabled = currentPage >= pages.length;
-        
-        // 额外显示日志，帮助调试
-        console.log(`当前页面索引: ${currentPage}, 总页数: ${pages.length}`);
+        if (prevBtn && nextBtn) {
+            // 如果当前是首页（-1）或之前，禁用上一页按钮
+            prevBtn.disabled = currentPage <= -1;
+            // 如果当前是最后一页或之后，禁用下一页按钮
+            nextBtn.disabled = currentPage >= pages.length;
+            
+            // 特殊情况：如果用户在首页，修改上一页按钮文本
+            if (currentPage === -1) {
+                prevBtn.textContent = '返回信封';
+            } else {
+                prevBtn.textContent = '← 上一页';
+            }
+            
+            // 特殊情况：如果用户在最后一个内容页，修改下一页按钮文本
+            if (currentPage === pages.length - 1) {
+                nextBtn.textContent = '进入末页 →';
+            } else {
+                nextBtn.textContent = '下一页 →';
+            }
+        }
     }
     
     // 显示指定的段落(原分段模式使用)
@@ -447,6 +482,21 @@ document.addEventListener('DOMContentLoaded', function() {
                 instructions.style.display = 'none';
                 bookContainer.style.display = 'block';
                 bookNavigation.style.display = 'flex';
+                // 显示首页
+                document.querySelector('.first-page').style.display = 'flex';
+                // 隐藏所有页面，然后在点击首页后显示第一页内容
+                pages.forEach(page => {
+                    page.style.display = 'none';
+                });
+                
+                // 给首页添加点击事件
+                document.querySelector('.first-page').addEventListener('click', function() {
+                    this.style.display = 'none';
+                    if (pages.length > 0) {
+                        pages[0].style.display = 'block';
+                        updateBookNavigation();
+                    }
+                }, { once: true });
             }, 1000);
         }
     }
