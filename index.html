@@ -30,12 +30,11 @@
             transform-style: preserve-3d;
             transform: rotateY(0deg);
             transition: transform 0.5s;
-            aspect-ratio: 1.41;
         }
         
         .page {
             position: absolute;
-            width: 65%;
+            width: 100%;
             height: 100%;
             top: 0;
             right: 0;
@@ -44,11 +43,10 @@
             box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
             transform-style: preserve-3d;
             transition: transform 1.2s cubic-bezier(0.645, 0.045, 0.355, 1.000);
-            border-radius: 0 5px 5px 0;
+            border-radius: 5px;
             overflow: hidden;
             cursor: pointer;
             backface-visibility: hidden;
-            aspect-ratio: 0.71;
         }
         
         .page::before {
@@ -129,6 +127,14 @@
             position: relative;
             backface-visibility: hidden;
             z-index: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            padding: 35px 40px;
+            box-sizing: border-box;
+            overflow-y: auto;
+            overflow-x: hidden;
         }
         
         .page-back::before {
@@ -156,6 +162,7 @@
         
         .page.flipped {
             transform: rotateY(-180deg);
+            z-index: 0;
         }
         
         .page.flipped .page-back {
@@ -226,6 +233,7 @@
             margin-top: 20px;
             position: relative;
             z-index: 999;
+            width: 100%;
         }
         
         .book-btn {
@@ -256,7 +264,7 @@
         
         .first-page, .last-page {
             position: absolute;
-            width: 35%;
+            width: 100%;
             height: 100%;
             background-color: #f8e9e9;
             box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
@@ -264,7 +272,7 @@
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            border-radius: 5px 0 0 5px;
+            border-radius: 5px;
             padding: 30px;
             box-sizing: border-box;
             z-index: 1;
@@ -273,21 +281,18 @@
         .first-page {
             left: 0;
             background: linear-gradient(135deg, #fff3f3, #ffe6e6);
-            border-right: 1px solid #f1d1d1;
-            box-shadow: 
-                inset 0 0 30px rgba(200, 80, 80, 0.1),
-                5px 0 15px rgba(0, 0, 0, 0.1);
+            box-shadow: inset 0 0 30px rgba(200, 80, 80, 0.1),
+                      0 0 15px rgba(0, 0, 0, 0.1);
         }
         
         .last-page {
             right: 0;
             background: linear-gradient(135deg, #fff3f3, #ffe6e6);
-            border-left: 1px solid #f1d1d1;
             text-align: center;
             display: none;
-            box-shadow: 
-                inset 0 0 30px rgba(200, 80, 80, 0.1),
-                -5px 0 15px rgba(0, 0, 0, 0.1);
+            box-shadow: inset 0 0 30px rgba(200, 80, 80, 0.1),
+                      0 0 15px rgba(0, 0, 0, 0.1);
+            z-index: 2;
         }
         
         .book-title {
@@ -386,16 +391,7 @@
         }
         
         .book-spine-shadow {
-            position: absolute;
-            top: 0;
-            left: 35%;
-            width: 20px;
-            height: 100%;
-            background: linear-gradient(to right, 
-                rgba(0,0,0,0.2) 0%, 
-                rgba(0,0,0,0) 100%);
-            pointer-events: none;
-            z-index: 5;
+            display: none;
         }
         
         .save-image-btn {
@@ -497,6 +493,12 @@
         @media (max-width: 768px) {
             .book-container {
                 height: 450px;
+                width: 100%;
+                max-width: 100%;
+            }
+            
+            .book {
+                width: 100%;
             }
             
             .page-front, .page-back {
@@ -505,13 +507,13 @@
             
             .page-content h2 {
                 font-size: 20px;
-                max-width: 400px;
+                max-width: 100%;
                 margin-bottom: 15px;
             }
             
             .page-content p {
                 font-size: 14px;
-                max-width: 400px;
+                max-width: 100%;
             }
             
             .signature {
@@ -522,16 +524,45 @@
             .page-number {
                 bottom: 10px;
                 font-size: 11px;
+                right: 15px;
+            }
+            
+            .first-page, .last-page {
+                padding: 20px;
+                width: 100%;
+            }
+            
+            .book-navigation {
+                width: 100%;
             }
         }
         
         @media (max-width: 480px) {
             .book-container {
-                height: 340px;
+                height: 100vh;
+                max-height: 500px;
+                width: 100%;
+                max-width: 100%;
+                padding: 0;
+                margin: 0;
+            }
+            
+            .book {
+                width: 100%;
+                height: 100%;
+                aspect-ratio: auto;
+            }
+            
+            .page {
+                width: 100%;
+                height: 100%;
+                border-radius: 0;
+                box-shadow: none;
             }
             
             .page-front, .page-back {
                 padding: 15px 20px;
+                border-radius: 0;
             }
             
             .book-title {
@@ -546,14 +577,14 @@
             
             .page-content h2 {
                 font-size: 18px;
-                max-width: 280px;
+                max-width: 100%;
                 margin-bottom: 12px;
             }
             
             .page-content p {
                 font-size: 13px;
                 line-height: 1.6;
-                max-width: 280px;
+                max-width: 100%;
             }
             
             .page-decoration {
@@ -564,7 +595,8 @@
             .bookmark {
                 width: 20px;
                 height: 40px;
-                right: 12%;
+                right: 5%;
+                top: -5px;
             }
             
             .signature {
@@ -575,14 +607,43 @@
             .page-number {
                 bottom: 8px;
                 font-size: 10px;
-            }
-            
-            .page-front .page-number {
                 right: 15px;
             }
             
-            .page-back .page-number {
-                left: 15px;
+            .first-page, .last-page {
+                padding: 15px;
+                width: 100%;
+                border-radius: 0;
+                height: 100%;
+            }
+            
+            .save-image-btn {
+                margin-top: 15px;
+                padding: 8px 16px;
+                font-size: 14px;
+            }
+            
+            .book-navigation {
+                position: fixed;
+                bottom: 60px;
+                left: 0;
+                width: 100%;
+                padding: 0 15px;
+                box-sizing: border-box;
+                gap: 10px;
+            }
+            
+            .book-btn {
+                flex: 1;
+                padding: 8px 0;
+                font-size: 14px;
+            }
+
+            .create-new-btn {
+                bottom: 15px;
+                right: 15px;
+                padding: 8px 15px;
+                font-size: 14px;
             }
         }
     </style>
