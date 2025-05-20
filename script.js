@@ -38,8 +38,62 @@ document.addEventListener('DOMContentLoaded', function() {
         // 先检查URL参数
         const urlParams = new URLSearchParams(window.location.search);
         const dataParam = urlParams.get('data');
+        const compressedData = urlParams.get('d'); // 新增支持压缩数据格式
         const isPreview = urlParams.get('preview') === 'true';
         
+        // 尝试解析压缩数据格式（优先）
+        if (compressedData) {
+            try {
+                // 确保LZString已加载
+                if (typeof LZString === 'undefined') {
+                    // 如果LZString未加载，动态加载它
+                    const script = document.createElement('script');
+                    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.4.4/lz-string.min.js';
+                    document.head.appendChild(script);
+                    
+                    // 等待脚本加载完成
+                    return new Promise((resolve) => {
+                        script.onload = () => {
+                            try {
+                                const decompressed = LZString.decompressFromEncodedURIComponent(compressedData);
+                                const parsedData = JSON.parse(decompressed);
+                                
+                                // 转换简短字段名为完整字段名
+                                const result = {
+                                    recipient: parsedData.r,
+                                    paragraphs: parsedData.p,
+                                    signature: parsedData.s,
+                                    color: parsedData.c,
+                                    bookMode: parsedData.b
+                                };
+                                resolve(result);
+                            } catch (e) {
+                                console.error('解析压缩数据出错', e);
+                                resolve(null);
+                            }
+                        };
+                        script.onerror = () => resolve(null);
+                    });
+                } else {
+                    // LZString已加载，直接解压
+                    const decompressed = LZString.decompressFromEncodedURIComponent(compressedData);
+                    const parsedData = JSON.parse(decompressed);
+                    
+                    // 转换简短字段名为完整字段名
+                    return {
+                        recipient: parsedData.r,
+                        paragraphs: parsedData.p,
+                        signature: parsedData.s,
+                        color: parsedData.c,
+                        bookMode: parsedData.b
+                    };
+                }
+            } catch (e) {
+                console.error('解析压缩数据出错', e);
+            }
+        }
+        
+        // 尝试旧格式数据
         if (dataParam) {
             try {
                 return JSON.parse(decodeURIComponent(dataParam));
@@ -742,4 +796,19 @@ document.addEventListener('DOMContentLoaded', function() {
     createNewBtn && createNewBtn.addEventListener('click', function() {
         window.location.href = 'welcome.html';
     });
+    
+    // 计算文本字数（不包括标点符号）
+    function countTextChars(text) {
+        if (!text) return 0;
+        // 移除所有标点符号和空格，只保留中英文字符和数字
+        return text.replace(/[\s\p{P}]/gu, '').length;
+    }
+    
+    // 计算所有段落总字数（不包括标点符号）
+    function countTotalChars(paragraphs) {
+        if (!paragraphs || !paragraphs.length) return 0;
+        return paragraphs.reduce((total, paragraph) => {
+            return total + countTextChars(paragraph);
+        }, 0);
+    }
 }); 
