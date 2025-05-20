@@ -4,6 +4,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const shareButton = document.getElementById('shareButton');
     const nextParagraphBtn = document.getElementById('nextParagraphBtn');
     const paragraphCounter = document.getElementById('paragraphCounter');
+    const createNewBtn = document.getElementById('createNewBtn');
     let isOpen = false;
     
     // 书籍相关元素
@@ -70,6 +71,13 @@ document.addEventListener('DOMContentLoaded', function() {
         if (customData) {
             // 检查是否是书籍模式
             useBookMode = customData.bookMode === true;
+            
+            // 如果是分享模式，隐藏创建新情书按钮
+            if (customData.data || window.location.search.includes('data=')) {
+                if (createNewBtn) {
+                    createNewBtn.style.display = 'none';
+                }
+            }
             
             // 设置信封颜色
             if (customData.color) {
@@ -679,4 +687,9 @@ document.addEventListener('DOMContentLoaded', function() {
         oscillator.start();
         oscillator.stop(audioContext.currentTime + 0.2);
     }
+
+    // 创建新情书按钮点击事件
+    createNewBtn && createNewBtn.addEventListener('click', function() {
+        window.location.href = 'welcome.html';
+    });
 }); 
