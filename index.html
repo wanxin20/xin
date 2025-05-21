@@ -689,6 +689,22 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.4.4/lz-string.min.js"></script>
     <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+    <script>
+        // 检查URL是否包含分享参数
+        window.addEventListener('DOMContentLoaded', function() {
+            // 获取URL查询参数
+            const urlParams = new URLSearchParams(window.location.search);
+            
+            // 如果URL中包含任何参数，认为这是一个分享链接
+            if (urlParams.toString() !== '') {
+                // 隐藏"创建新情书"按钮
+                const createNewBtn = document.getElementById('createNewBtn');
+                if (createNewBtn) {
+                    createNewBtn.style.display = 'none';
+                }
+            }
+        });
+    </script>
     <script src="script.js"></script>
 </body>
 </html> 
