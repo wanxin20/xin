@@ -427,6 +427,12 @@
             box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
             border: 10px solid white;
             background-color: white;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            -webkit-touch-callout: default;
+            -webkit-long-press: enabled;
         }
         
         .image-preview-close {
@@ -436,6 +442,7 @@
             color: white;
             font-size: 30px;
             cursor: pointer;
+            z-index: 1001;
         }
         
         .image-preview-download {
@@ -447,6 +454,15 @@
             border-radius: 5px;
             cursor: pointer;
             font-size: 16px;
+        }
+        
+        .mobile-save-tip {
+            color: white;
+            text-align: center;
+            margin-top: 10px;
+            font-size: 14px;
+            padding: 0 20px;
+            line-height: 1.4;
         }
         
         .create-new-btn {
@@ -680,6 +696,9 @@
         <div class="image-preview-close" id="imagePreviewClose">×</div>
         <img id="imagePreview" class="image-preview">
         <button id="downloadImageBtn" class="image-preview-download">下载图片</button>
+        <div class="mobile-save-tip" id="mobileSaveTip" style="display: none;">
+            📱 手机用户：长按上方图片即可保存到相册
+        </div>
     </div>
     
     <button id="createNewBtn" class="create-new-btn">

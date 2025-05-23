@@ -20,6 +20,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const imagePreview = document.getElementById('imagePreview');
     const imagePreviewClose = document.getElementById('imagePreviewClose');
     const downloadImageBtn = document.getElementById('downloadImageBtn');
+    const mobileSaveTip = document.getElementById('mobileSaveTip');
     
     // 分段显示相关变量
     let paragraphs = [];
@@ -38,285 +39,8 @@ document.addEventListener('DOMContentLoaded', function() {
         // 先检查URL参数
         const urlParams = new URLSearchParams(window.location.search);
         const dataParam = urlParams.get('data');
-        const compressedData = urlParams.get('d'); // 旧压缩数据格式
-        const optimizedData = urlParams.get('x'); // 优化压缩格式
-        const utf16Data = urlParams.get('u'); // UTF16压缩格式
-        const b64urlData = urlParams.get('z'); // Base64URL压缩格式
-        const rawData = urlParams.get('r'); // 原始Base64URL格式
-        const customLZ64Data = urlParams.get('c'); // 自定义+LZ Base64格式
-        const customB64Data = urlParams.get('b'); // 自定义+Base64格式
-        const hashData = urlParams.get('h'); // 哈希本地存储格式
+        const compressedData = urlParams.get('d'); // 新增支持压缩数据格式
         const isPreview = urlParams.get('preview') === 'true';
-        
-        // 颜色映射表
-        const colorMap = {
-            '0': '#e74c3c',
-            '1': '#9b59b6', 
-            '2': '#3498db',
-            '3': '#2ecc71',
-            '4': '#f1c40f',
-            '5': '#e67e22'
-        };
-        
-        // 词汇替换还原映射表
-        const wordReplacements = {
-            'A': '亲爱的',
-            'B': '朋友',
-            'C': '你好',
-            'D': '谢谢',
-            'E': '感谢',
-            'F': '喜欢',
-            'G': '开心',
-            'H': '快乐',
-            'I': '幸福',
-            'J': '美好',
-            'K': '温暖',
-            'L': '阳光',
-            'M': '微笑',
-            'N': '拥抱',
-            'O': '陪伴',
-            'P': '支持',
-            'Q': '理解',
-            'R': '关心',
-            'S': '照顾',
-            'T': '保护',
-            'U': '永远',
-            'V': '一直',
-            'W': '总是',
-            'X': '每天',
-            'Y': '今天',
-            'Z': '明天',
-            'a': '时候',
-            'b': '时间',
-            'c': '地方',
-            'd': '世界',
-            'e': '生活',
-            'f': '工作',
-            'g': '学习',
-            'h': '努力',
-            'i': '梦想',
-            'j': '希望',
-            'k': '相信',
-            'l': '记得',
-            'm': '知道',
-            'n': '明白',
-            'o': '懂得',
-            'p': '发现',
-            'q': '觉得',
-            'r': '认为',
-            's': '想要',
-            't': '需要',
-            'u': '可以',
-            'v': '能够',
-            'w': '应该',
-            'x': '必须',
-            'y': '一定',
-            'z': '也许',
-            '0': '特别',
-            '1': '非常',
-            '2': '真的',
-            '3': '确实',
-            '4': '其实',
-            '5': '因为',
-            '6': '所以',
-            '7': '但是',
-            '8': '然后',
-            '9': '还有'
-        };
-        
-        // 词汇还原函数
-        function restoreWords(text) {
-            let result = text;
-            Object.keys(wordReplacements).forEach(code => {
-                const regex = new RegExp(`~${code}~`, 'g');
-                result = result.replace(regex, wordReplacements[code]);
-            });
-            return result;
-        }
-        
-        // 解析数组格式数据的通用函数（向后兼容）
-        function parseArrayData(dataArray) {
-            if (!Array.isArray(dataArray)) return null;
-            
-            return {
-                recipient: dataArray[0] || '亲爱的朋友',
-                paragraphs: dataArray[1] ? dataArray[1].split('|') : [],
-                signature: dataArray[2] || '爱你的朋友',
-                color: colorMap[dataArray[3]] || '#e74c3c',
-                bookMode: dataArray[4] === 1
-            };
-        }
-        
-        // 解析自定义格式数据
-        function parseCustomFormat(customStr) {
-            const parts = customStr.split('¦');
-            
-            return {
-                recipient: parts[0] ? restoreWords(parts[0]) : '亲爱的朋友',
-                paragraphs: parts[1] ? parts[1].split('§').map(p => restoreWords(p)) : [],
-                signature: parts[2] ? restoreWords(parts[2]) : '爱你的朋友',
-                color: colorMap[parts[3]] || '#e74c3c',
-                bookMode: parts[4] === '1'
-            };
-        }
-        
-        // 尝试解析哈希本地存储格式（最优先）
-        if (hashData) {
-            try {
-                const storageKey = `letter_${hashData}`;
-                const storedData = localStorage.getItem(storageKey);
-                if (storedData) {
-                    const parsedData = JSON.parse(storedData);
-                    return {
-                        recipient: parsedData.recipient,
-                        paragraphs: parsedData.paragraphs,
-                        signature: parsedData.signature,
-                        color: parsedData.color,
-                        bookMode: parsedData.bookMode
-                    };
-                } else {
-                    console.warn('本地存储中未找到对应的情书数据');
-                    return null;
-                }
-            } catch (e) {
-                console.error('解析哈希存储数据出错', e);
-            }
-        }
-        
-        // 尝试解析自定义+LZ Base64格式
-        if (customLZ64Data) {
-            try {
-                if (typeof LZString !== 'undefined') {
-                    const decompressed = LZString.decompressFromBase64(customLZ64Data);
-                    return parseCustomFormat(decompressed);
-                }
-            } catch (e) {
-                console.error('解析自定义LZ Base64数据出错', e);
-            }
-        }
-        
-        // 尝试解析自定义+Base64格式
-        if (customB64Data) {
-            try {
-                // 还原Base64URL到Base64
-                const base64 = customB64Data.replace(/-/g, '+').replace(/_/g, '/');
-                const padding = '='.repeat((4 - base64.length % 4) % 4);
-                const decoded = atob(base64 + padding);
-                const customStr = decodeURIComponent(decoded);
-                return parseCustomFormat(customStr);
-            } catch (e) {
-                console.error('解析自定义Base64数据出错', e);
-            }
-        }
-        
-        // 尝试解析原始Base64URL格式（最新）
-        if (rawData) {
-            try {
-                // 还原Base64URL到Base64
-                const base64 = rawData.replace(/-/g, '+').replace(/_/g, '/');
-                const padding = '='.repeat((4 - base64.length % 4) % 4);
-                const decoded = atob(base64 + padding);
-                const jsonStr = decodeURIComponent(decoded);
-                const parsedData = JSON.parse(jsonStr);
-                
-                return parseArrayData(parsedData);
-            } catch (e) {
-                console.error('解析原始压缩数据出错', e);
-            }
-        }
-        
-        // 尝试解析Base64URL压缩格式
-        if (b64urlData) {
-            try {
-                if (typeof LZString !== 'undefined') {
-                    // 还原Base64URL格式
-                    const restored = b64urlData.replace(/-/g, '+').replace(/_/g, '/');
-                    const padding = '='.repeat((4 - restored.length % 4) % 4);
-                    const decompressed = LZString.decompressFromBase64(restored + padding);
-                    const parsedData = JSON.parse(decompressed);
-                    
-                    return parseArrayData(parsedData);
-                }
-            } catch (e) {
-                console.error('解析Base64URL压缩数据出错', e);
-            }
-        }
-        
-        // 尝试解析UTF16压缩格式
-        if (utf16Data) {
-            try {
-                if (typeof LZString !== 'undefined') {
-                    const decompressed = LZString.decompressFromUTF16(utf16Data);
-                    const parsedData = JSON.parse(decompressed);
-                    
-                    return parseArrayData(parsedData);
-                }
-            } catch (e) {
-                console.error('解析UTF16压缩数据出错', e);
-            }
-        }
-        
-        // 尝试解析新的优化压缩格式（优先）
-        if (optimizedData) {
-            try {
-                // 确保LZString已加载
-                if (typeof LZString === 'undefined') {
-                    // 如果LZString未加载，动态加载它
-                    const script = document.createElement('script');
-                    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.4.4/lz-string.min.js';
-                    document.head.appendChild(script);
-                    
-                    // 等待脚本加载完成
-                    return new Promise((resolve) => {
-                        script.onload = () => {
-                            try {
-                                const decompressed = LZString.decompressFromBase64(optimizedData);
-                                const parsedData = JSON.parse(decompressed);
-                                
-                                // 检查是否是数组格式（新格式）
-                                if (Array.isArray(parsedData)) {
-                                    resolve(parseArrayData(parsedData));
-                                } else {
-                                    // 兼容旧的对象格式
-                                    const result = {
-                                        recipient: parsedData.r || '亲爱的朋友',
-                                        paragraphs: parsedData.p,
-                                        signature: parsedData.s || '爱你的朋友',
-                                        color: colorMap[parsedData.c] || '#e74c3c',
-                                        bookMode: parsedData.b === 1
-                                    };
-                                    resolve(result);
-                                }
-                            } catch (e) {
-                                console.error('解析优化压缩数据出错', e);
-                                resolve(null);
-                            }
-                        };
-                        script.onerror = () => resolve(null);
-                    });
-                } else {
-                    // LZString已加载，直接解压
-                    const decompressed = LZString.decompressFromBase64(optimizedData);
-                    const parsedData = JSON.parse(decompressed);
-                    
-                    // 检查是否是数组格式（新格式）
-                    if (Array.isArray(parsedData)) {
-                        return parseArrayData(parsedData);
-                    } else {
-                        // 兼容旧的对象格式
-                        return {
-                            recipient: parsedData.r || '亲爱的朋友',
-                            paragraphs: parsedData.p,
-                            signature: parsedData.s || '爱你的朋友',
-                            color: colorMap[parsedData.c] || '#e74c3c',
-                            bookMode: parsedData.b === 1
-                        };
-                    }
-                }
-            } catch (e) {
-                console.error('解析优化压缩数据出错', e);
-            }
-        }
         
         // 尝试解析压缩数据格式（优先）
         if (compressedData) {
@@ -964,6 +688,32 @@ document.addEventListener('DOMContentLoaded', function() {
             imagePreview.src = canvas.toDataURL('image/png');
             imagePreviewContainer.style.display = 'flex';
             
+            // 检测是否为移动设备，如果是则显示保存提示
+            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+            
+            if (isMobile && mobileSaveTip) {
+                mobileSaveTip.style.display = 'block';
+                // 根据具体环境调整提示文本
+                if (/MicroMessenger/i.test(navigator.userAgent)) {
+                    mobileSaveTip.innerHTML = '📱 微信用户：长按上方图片选择"保存图片"';
+                } else if (/QQ/i.test(navigator.userAgent)) {
+                    mobileSaveTip.innerHTML = '📱 QQ用户：长按上方图片选择"保存到相册"';
+                } else {
+                    mobileSaveTip.innerHTML = '📱 手机用户：长按上方图片即可保存到相册';
+                }
+                
+                // 修改下载按钮文本
+                if (downloadImageBtn) {
+                    downloadImageBtn.textContent = '保存说明';
+                }
+            } else if (mobileSaveTip) {
+                mobileSaveTip.style.display = 'none';
+                // 桌面端保持原有按钮文本
+                if (downloadImageBtn) {
+                    downloadImageBtn.textContent = '下载图片';
+                }
+            }
+            
             // 保存图片数据以供下载
             imagePreview.dataset.download = canvas.toDataURL('image/png').replace('image/png', 'image/octet-stream');
             
@@ -976,12 +726,116 @@ document.addEventListener('DOMContentLoaded', function() {
     function downloadImage() {
         if (!imagePreview.src) return;
         
-        const link = document.createElement('a');
-        link.download = '心动情书_' + new Date().getTime() + '.png';
-        link.href = imagePreview.dataset.download;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+        // 检测是否为移动设备
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        
+        // 检测是否在微信内置浏览器中
+        const isWeChat = /MicroMessenger/i.test(navigator.userAgent);
+        
+        // 检测是否在QQ内置浏览器中
+        const isQQ = /QQ/i.test(navigator.userAgent);
+        
+        // 检测是否在其他app内置浏览器中
+        const isInApp = isWeChat || isQQ || (isMobile && !window.chrome);
+        
+        if (isInApp || isMobile) {
+            // 对于手机端或app内置浏览器，显示特殊提示
+            showMobileDownloadInstructions();
+        } else {
+            // 对于桌面浏览器，使用传统下载方式
+            const link = document.createElement('a');
+            link.download = '心动情书_' + new Date().getTime() + '.png';
+            link.href = imagePreview.dataset.download;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+    }
+    
+    // 显示移动端下载说明
+    function showMobileDownloadInstructions() {
+        // 创建说明弹窗
+        const instructionModal = document.createElement('div');
+        instructionModal.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            z-index: 10000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            padding: 20px;
+        `;
+        
+        const instructionContent = document.createElement('div');
+        instructionContent.style.cssText = `
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            text-align: center;
+            max-width: 350px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        `;
+        
+        // 检测具体环境并提供相应说明
+        let instructions = '';
+        if (/MicroMessenger/i.test(navigator.userAgent)) {
+            instructions = `
+                <h3 style="color: #e74c3c; margin-bottom: 15px;">📱 微信中保存图片</h3>
+                <p style="line-height: 1.6; margin-bottom: 15px;">1. <strong>长按</strong>下方图片</p>
+                <p style="line-height: 1.6; margin-bottom: 15px;">2. 选择"<strong>保存图片</strong>"</p>
+                <p style="color: #666; font-size: 14px;">图片将保存到您的相册中</p>
+            `;
+        } else if (/QQ/i.test(navigator.userAgent)) {
+            instructions = `
+                <h3 style="color: #e74c3c; margin-bottom: 15px;">📱 QQ中保存图片</h3>
+                <p style="line-height: 1.6; margin-bottom: 15px;">1. <strong>长按</strong>下方图片</p>
+                <p style="line-height: 1.6; margin-bottom: 15px;">2. 选择"<strong>保存到相册</strong>"</p>
+                <p style="color: #666; font-size: 14px;">图片将保存到您的相册中</p>
+            `;
+        } else {
+            instructions = `
+                <h3 style="color: #e74c3c; margin-bottom: 15px;">📱 手机中保存图片</h3>
+                <p style="line-height: 1.6; margin-bottom: 15px;">1. <strong>长按</strong>下方图片</p>
+                <p style="line-height: 1.6; margin-bottom: 15px;">2. 选择"<strong>保存图片</strong>"或"<strong>下载图片</strong>"</p>
+                <p style="color: #666; font-size: 14px;">图片将保存到您的相册或下载文件夹中</p>
+            `;
+        }
+        
+        instructionContent.innerHTML = instructions;
+        
+        // 添加关闭按钮
+        const closeBtn = document.createElement('button');
+        closeBtn.textContent = '我知道了';
+        closeBtn.style.cssText = `
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            margin-top: 20px;
+            cursor: pointer;
+            font-size: 16px;
+        `;
+        
+        closeBtn.onclick = function() {
+            document.body.removeChild(instructionModal);
+        };
+        
+        instructionContent.appendChild(closeBtn);
+        instructionModal.appendChild(instructionContent);
+        document.body.appendChild(instructionModal);
+        
+        // 点击背景也可以关闭
+        instructionModal.onclick = function(e) {
+            if (e.target === instructionModal) {
+                document.body.removeChild(instructionModal);
+            }
+        };
     }
 
     // 分享按钮点击事件

@@ -636,213 +636,33 @@
                 const signature = document.getElementById('signature').value || '爱你的朋友';
                 const selectedColor = document.querySelector('.color-option.selected').getAttribute('data-color');
                 
-                // 超级激进压缩 - 词汇替换映射表
-                const wordReplacements = {
-                    '亲爱的': 'A',
-                    '朋友': 'B',
-                    '你好': 'C',
-                    '谢谢': 'D',
-                    '感谢': 'E',
-                    '喜欢': 'F',
-                    '开心': 'G',
-                    '快乐': 'H',
-                    '幸福': 'I',
-                    '美好': 'J',
-                    '温暖': 'K',
-                    '阳光': 'L',
-                    '微笑': 'M',
-                    '拥抱': 'N',
-                    '陪伴': 'O',
-                    '支持': 'P',
-                    '理解': 'Q',
-                    '关心': 'R',
-                    '照顾': 'S',
-                    '保护': 'T',
-                    '永远': 'U',
-                    '一直': 'V',
-                    '总是': 'W',
-                    '每天': 'X',
-                    '今天': 'Y',
-                    '明天': 'Z',
-                    '时候': 'a',
-                    '时间': 'b',
-                    '地方': 'c',
-                    '世界': 'd',
-                    '生活': 'e',
-                    '工作': 'f',
-                    '学习': 'g',
-                    '努力': 'h',
-                    '梦想': 'i',
-                    '希望': 'j',
-                    '相信': 'k',
-                    '记得': 'l',
-                    '知道': 'm',
-                    '明白': 'n',
-                    '懂得': 'o',
-                    '发现': 'p',
-                    '觉得': 'q',
-                    '认为': 'r',
-                    '想要': 's',
-                    '需要': 't',
-                    '可以': 'u',
-                    '能够': 'v',
-                    '应该': 'w',
-                    '必须': 'x',
-                    '一定': 'y',
-                    '也许': 'z',
-                    '特别': '0',
-                    '非常': '1',
-                    '真的': '2',
-                    '确实': '3',
-                    '其实': '4',
-                    '因为': '5',
-                    '所以': '6',
-                    '但是': '7',
-                    '然后': '8',
-                    '还有': '9'
-                };
-                
-                // 颜色压缩映射
-                const colorMap = {
-                    '#e74c3c': '0',
-                    '#9b59b6': '1', 
-                    '#3498db': '2',
-                    '#2ecc71': '3',
-                    '#f1c40f': '4',
-                    '#e67e22': '5'
-                };
-                
-                // 词汇替换函数
-                function replaceWords(text) {
-                    let result = text;
-                    Object.keys(wordReplacements).forEach(word => {
-                        const regex = new RegExp(word, 'g');
-                        result = result.replace(regex, `~${wordReplacements[word]}~`);
-                    });
-                    return result;
-                }
-                
-                // 处理数据
-                const processedParagraphs = paragraphs.map(p => replaceWords(p));
-                const processedRecipient = replaceWords(recipient);
-                const processedSignature = replaceWords(signature);
-                
-                // 创建最简数据结构 - 使用分隔符而不是JSON
-                const parts = [
-                    processedRecipient === replaceWords('亲爱的朋友') ? '' : processedRecipient,
-                    processedParagraphs.join('§'), // 使用特殊分隔符
-                    processedSignature === replaceWords('爱你的朋友') ? '' : processedSignature,
-                    colorMap[selectedColor] || '0',
-                    useBookMode ? '1' : '0'
-                ];
-                
-                // 移除末尾默认值
-                while (parts.length > 2 && (parts[parts.length - 1] === '' || parts[parts.length - 1] === '0')) {
-                    if (parts.length === 5 && parts[4] === '1') break;
-                    parts.pop();
-                }
-                
-                // 使用自定义分隔符连接，比JSON更短
-                const customFormat = parts.join('¦');
-                
-                // 尝试多种压缩算法
-                const compressionMethods = [
-                    {
-                        name: 'custom+lz64',
-                        param: 'c',
-                        compress: () => LZString.compressToBase64(customFormat)
-                    },
-                    {
-                        name: 'custom+lzuri',
-                        param: 'd',
-                        compress: () => LZString.compressToEncodedURIComponent(customFormat)
-                    },
-                    {
-                        name: 'custom+b64',
-                        param: 'b',
-                        compress: () => btoa(encodeURIComponent(customFormat)).replace(/[+/=]/g, m => ({'+':'-','/':'_','=':''}[m]))
-                    },
-                    {
-                        name: 'raw',
-                        param: 'r',
-                        compress: () => encodeURIComponent(customFormat)
-                    }
-                ];
-                
-                let bestResult = { size: Infinity, url: '', method: 'none' };
-                
-                compressionMethods.forEach(method => {
-                    try {
-                        const compressed = method.compress();
-                        const url = `${window.location.origin}${window.location.pathname.replace('customize.html', 'index.html')}?${method.param}=${compressed}`;
-                        
-                        if (url.length < bestResult.size) {
-                            bestResult = {
-                                size: url.length,
-                                url: url,
-                                method: method.name,
-                                compressed: compressed
-                            };
-                        }
-                    } catch (e) {
-                        console.warn(`压缩方法 ${method.name} 失败:`, e);
-                    }
-                });
-                
-                // 如果仍然太长，尝试进一步优化
-                if (bestResult.size > 500) {
-                    // 创建超短版本：使用哈希存储
-                    const hash = btoa(bestResult.compressed).slice(0, 8);
-                    localStorage.setItem(`letter_${hash}`, JSON.stringify({
-                        recipient,
-                        paragraphs,
-                        signature,
-                        color: selectedColor,
-                        bookMode: useBookMode,
-                        timestamp: Date.now()
-                    }));
-                    
-                    const shortUrl = `${window.location.origin}${window.location.pathname.replace('customize.html', 'index.html')}?h=${hash}`;
-                    
-                    if (shortUrl.length < bestResult.size) {
-                        bestResult = {
-                            size: shortUrl.length,
-                            url: shortUrl,
-                            method: 'hash-local',
-                            isLocal: true
-                        };
-                    }
-                }
-                
-                // 对比原始方法
-                const oldUrl = `${window.location.origin}${window.location.pathname.replace('customize.html', 'index.html')}?d=${LZString.compressToEncodedURIComponent(JSON.stringify({
-                    r: recipient,
-                    p: paragraphs, 
+                // 创建数据对象
+                const dataObj = {
+                    r: recipient,  // 使用短键名减少体积
+                    p: paragraphs,
                     s: signature,
                     c: selectedColor,
                     b: useBookMode
-                }))}`;
+                };
                 
-                console.log(`=== 压缩分析 ===`);
-                console.log(`原文长度: ${(recipient + paragraphs.join('') + signature).length} 字符`);
-                console.log(`词汇替换后: ${customFormat.length} 字符`);
-                console.log(`旧方法链接: ${oldUrl.length} 字符`);
-                console.log(`新方法链接: ${bestResult.size} 字符`);
-                console.log(`压缩算法: ${bestResult.method}`);
-                console.log(`压缩率: ${((oldUrl.length - bestResult.size) / oldUrl.length * 100).toFixed(1)}%`);
+                // 将数据对象转为JSON字符串
+                const jsonStr = JSON.stringify(dataObj);
                 
-                // 复制到剪贴板
+                // 使用LZString压缩数据（比普通编码减少约50-70%体积）
+                const compressedData = LZString.compressToEncodedURIComponent(jsonStr);
+                
+                // 使用压缩后的数据构建URL
+                const url = `${window.location.origin}${window.location.pathname.replace('customize.html', 'index.html')}?d=${compressedData}`;
+                
+                // 复制链接到剪贴板
                 const tempInput = document.createElement('input');
                 document.body.appendChild(tempInput);
-                tempInput.value = bestResult.url;
+                tempInput.value = url;
                 tempInput.select();
                 document.execCommand('copy');
                 document.body.removeChild(tempInput);
                 
-                const reductionRate = ((oldUrl.length - bestResult.size) / oldUrl.length * 100).toFixed(1);
-                const warningText = bestResult.isLocal ? '\n⚠️ 注意：此链接使用本地存储，只能在当前设备访问' : '';
-                
-                alert(`🚀 超级压缩完成！\n📏 链接长度: ${bestResult.size} 字符\n📉 压缩率: ${reductionRate}%\n⚡ 算法: ${bestResult.method}${warningText}`);
+                alert('链接已压缩并复制到剪贴板，可以分享给朋友了！');
             });
             
             // 重置功能
