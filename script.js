@@ -285,6 +285,9 @@ document.addEventListener('DOMContentLoaded', function() {
         currentPage = -1;
         
         for (let i = 0; i < totalPages; i++) {
+            // 计算当前段落内容字数（不包括标点符号和空格）
+            const textLength = paragraphs[i].replace(/[\s\p{P}]/gu, '').length;
+            
             const page = document.createElement('div');
             page.className = 'page';
             page.style.zIndex = 100 - i;
@@ -312,20 +315,109 @@ document.addEventListener('DOMContentLoaded', function() {
             // 每页都添加收信人标题
             const frontTitle = document.createElement('h2');
             frontTitle.textContent = recipient;
-            frontTitle.style.marginBottom = '25px';
+            
+            // 根据内容长度调整标题样式
+            if (textLength <= 30) {
+                // 内容很少时，标题也适当调整
+                frontTitle.style.fontSize = '28px';
+                frontTitle.style.marginBottom = '40px';
+                frontTitle.style.textAlign = 'center';
+                frontTitle.style.fontWeight = '500';
+            } else if (textLength <= 80) {
+                // 内容适中时的标题样式
+                frontTitle.style.fontSize = '26px';
+                frontTitle.style.marginBottom = '35px';
+                frontTitle.style.textAlign = 'center';
+                frontTitle.style.fontWeight = '500';
+            } else {
+                // 内容较多时使用默认样式
+                frontTitle.style.marginBottom = '25px';
+            }
+            
             pageFront.appendChild(frontTitle);
             
             // 添加内容
             const paragraph = document.createElement('p');
             paragraph.textContent = paragraphs[i];
+            
+            // 根据内容长度动态调整样式
+            if (textLength <= 30) {
+                // 内容很少：大字体，居中显示，添加装饰元素
+                paragraph.style.fontSize = '24px';
+                paragraph.style.textAlign = 'center';
+                paragraph.style.lineHeight = '2.2';
+                paragraph.style.fontWeight = '400';
+                paragraph.style.marginTop = '60px';
+                paragraph.style.marginBottom = '60px';
+                paragraph.style.position = 'relative';
+                
+                // 添加装饰性引号
+                paragraph.style.quotes = '"" ""';
+                paragraph.style.setProperty('--before-content', '"""');
+                paragraph.style.setProperty('--after-content', '"""');
+                
+                // 添加一些装饰性的间距
+                pageFront.style.justifyContent = 'center';
+                pageFront.style.alignItems = 'center';
+                pageFront.style.display = 'flex';
+                pageFront.style.flexDirection = 'column';
+                
+                // 为短内容添加优雅的装饰边框
+                pageFront.style.background = 'linear-gradient(145deg, #fafafa, #ffffff)';
+                pageFront.style.position = 'relative';
+            } else if (textLength <= 80) {
+                // 内容适中：稍大字体，居中对齐
+                paragraph.style.fontSize = '20px';
+                paragraph.style.textAlign = 'center';
+                paragraph.style.lineHeight = '2.0';
+                paragraph.style.marginTop = '40px';
+                paragraph.style.marginBottom = '40px';
+                pageFront.style.justifyContent = 'center';
+                pageFront.style.alignItems = 'center';
+                pageFront.style.display = 'flex';
+                pageFront.style.flexDirection = 'column';
+            } else if (textLength <= 150) {
+                // 内容较多：正常字体，左对齐
+                paragraph.style.fontSize = '18px';
+                paragraph.style.textAlign = 'justify';
+                paragraph.style.lineHeight = '1.8';
+                paragraph.style.marginTop = '20px';
+                paragraph.style.marginBottom = '20px';
+            } else {
+                // 内容很多：较小字体，确保能完整显示
+                paragraph.style.fontSize = '16px';
+                paragraph.style.textAlign = 'justify';
+                paragraph.style.lineHeight = '1.7';
+                paragraph.style.marginTop = '15px';
+                paragraph.style.marginBottom = '15px';
+            }
+            
             pageFront.appendChild(paragraph);
-            console.log(`页面 ${i+1} 内容: ${paragraphs[i].substring(0, 20)}...`);
+            console.log(`页面 ${i+1} 内容: ${paragraphs[i].substring(0, 20)}..., 字数: ${textLength}`);
             
             // 如果是最后一页，添加签名
             if (i === paragraphs.length - 1) {
                 const signatureEl = document.createElement('p');
                 signatureEl.className = 'signature';
                 signatureEl.textContent = signature;
+                
+                // 根据内容长度调整签名样式
+                if (textLength <= 30) {
+                    // 内容很少时，签名居中显示
+                    signatureEl.style.textAlign = 'center';
+                    signatureEl.style.fontSize = '20px';
+                    signatureEl.style.marginTop = '60px';
+                } else if (textLength <= 80) {
+                    // 内容适中时，签名居中
+                    signatureEl.style.textAlign = 'center';
+                    signatureEl.style.fontSize = '20px';
+                    signatureEl.style.marginTop = '40px';
+                } else {
+                    // 内容较多时，签名右对齐（保持默认样式）
+                    signatureEl.style.textAlign = 'right';
+                    signatureEl.style.marginTop = '30px';
+                }
+                
                 pageFront.appendChild(signatureEl);
             }
             
