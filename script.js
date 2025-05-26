@@ -33,6 +33,7 @@ document.addEventListener('DOMContentLoaded', function() {
     let pages = [];
     let currentPage = 0;
     let useBookMode = false;
+    let customLetterTitle = '心动情书'; // 全局变量存储自定义情书标题
 
     // 检查URL参数或LocalStorage中是否有自定义数据
     function getCustomData() {
@@ -128,6 +129,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (customData) {
             // 设置页面标题
             if (customData.letterTitle) {
+                customLetterTitle = customData.letterTitle; // 保存到全局变量
                 document.title = customData.letterTitle;
                 // 同时设置书籍标题
                 const bookTitleElement = document.querySelector('.book-title');
@@ -717,9 +719,9 @@ document.addEventListener('DOMContentLoaded', function() {
         tempContainer.style.backgroundColor = 'white';
         tempContainer.style.fontFamily = "'Microsoft YaHei', '微软雅黑', sans-serif";
         
-        // 添加标题
+        // 添加标题 - 使用自定义情书名称
         const title = document.createElement('h1');
-        title.textContent = '心动情书';
+        title.textContent = customLetterTitle;
         title.style.color = 'var(--book-color)';
         title.style.textAlign = 'center';
         title.style.fontSize = '32px';
@@ -819,8 +821,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             }
             
-            // 保存图片数据以供下载
+            // 保存图片数据以供下载，同时保存文件名
             imagePreview.dataset.download = canvas.toDataURL('image/png').replace('image/png', 'image/octet-stream');
+            imagePreview.dataset.filename = customLetterTitle;
             
             // 从DOM中移除临时容器
             document.body.removeChild(tempContainer);
@@ -849,7 +852,9 @@ document.addEventListener('DOMContentLoaded', function() {
         } else {
             // 对于桌面浏览器，使用传统下载方式
             const link = document.createElement('a');
-            link.download = '心动情书_' + new Date().getTime() + '.png';
+            // 使用自定义的情书名称或默认名称
+            const customFileName = imagePreview.dataset.filename || '心动情书';
+            link.download = customFileName + '_' + new Date().getTime() + '.png';
             link.href = imagePreview.dataset.download;
             document.body.appendChild(link);
             link.click();
