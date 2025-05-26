@@ -61,6 +61,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                 
                                 // 转换简短字段名为完整字段名
                                 const result = {
+                                    letterTitle: parsedData.t,
                                     recipient: parsedData.r,
                                     paragraphs: parsedData.p,
                                     signature: parsedData.s,
@@ -82,6 +83,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     
                     // 转换简短字段名为完整字段名
                     return {
+                        letterTitle: parsedData.t,
                         recipient: parsedData.r,
                         paragraphs: parsedData.p,
                         signature: parsedData.s,
@@ -124,6 +126,16 @@ document.addEventListener('DOMContentLoaded', function() {
         const customData = getCustomData();
         
         if (customData) {
+            // 设置页面标题
+            if (customData.letterTitle) {
+                document.title = customData.letterTitle;
+                // 同时设置书籍标题
+                const bookTitleElement = document.querySelector('.book-title');
+                if (bookTitleElement) {
+                    bookTitleElement.textContent = customData.letterTitle;
+                }
+            }
+            
             // 检查是否是书籍模式
             useBookMode = customData.bookMode === true;
             
@@ -202,7 +214,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 if (useBookMode) {
                     // 书籍模式：准备书籍页面
-                    setupBookPages(recipient, paragraphs, signature);
+                    const letterTitle = customData.letterTitle || '心动情书';
+                    setupBookPages(recipient, paragraphs, signature, letterTitle);
                 } else if (isStepByStep) {
                     // 分段模式：只显示第一段
                     if (paragraphs.length > 0) {
@@ -255,7 +268,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // 设置书籍页面
-    function setupBookPages(recipient, paragraphs, signature) {
+    function setupBookPages(recipient, paragraphs, signature, letterTitle) {
         // 创建页面内容 - 每页只在正面显示一个段落
         const totalPages = paragraphs.length;
         console.log(`总段落数: ${paragraphs.length}, 总页数: ${totalPages}`);
@@ -265,7 +278,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (firstPage) {
             // 更新首页标题
             const bookTitle = firstPage.querySelector('.book-title');
-            if (bookTitle) bookTitle.textContent = '心动情书';
+            if (bookTitle) bookTitle.textContent = letterTitle || '心动情书';
             
             // 更新首页副标题
             const bookSubtitle = firstPage.querySelector('.book-subtitle');
