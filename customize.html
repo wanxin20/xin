@@ -350,7 +350,6 @@
     <div class="tip-box">
         <div class="tip-title">创建提示</div>
         <p>这是一本特别的书籍式情书，将您的内容添加为一页一页的书籍，带有精美的翻页效果。每页将展示一段内容，您可以添加多个段落创造一本完整的爱情小书。</p>
-        <p>您可以无限输入文字，系统会自动统计字数（不含标点符号），方便您掌握内容长度。</p>
     </div>
     
     <div class="book-preview">
@@ -361,14 +360,9 @@
                 <div class="book-shine"></div>
                 <div class="book-bookmark"></div>
             </div>
-            <h3 class="book-preview-title">爱意成册</h3>
+            <h3 class="book-preview-title">心动情书</h3>
             <p>献给特别的你</p>
         </div>
-    </div>
-    
-    <div class="form-group">
-        <label for="letterTitle">情书名称</label>
-        <input type="text" id="letterTitle" placeholder="例如：心动情书、爱的告白、520的信等">
     </div>
     
     <div class="form-group">
@@ -378,11 +372,7 @@
     
     <div class="form-group">
         <label for="currentParagraph">编写段落内容</label>
-        <textarea id="currentParagraph" placeholder="写下这一段的内容..." style="min-height: 150px;"></textarea>
-        <div style="display: flex; justify-content: space-between; margin-top: 5px;">
-            <span id="charCount" style="color: #666; font-size: 0.9rem;">当前段落：0字</span>
-            <span id="totalCount" style="color: #666; font-size: 0.9rem;">总字数：0字</span>
-        </div>
+        <textarea id="currentParagraph" placeholder="写下这一段的内容..."></textarea>
         <button id="addParagraphBtn" class="add-paragraph-btn">添加此段落</button>
     </div>
     
@@ -416,7 +406,6 @@
         <button id="resetButton">重置</button>
     </div>
     
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.4.4/lz-string.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const colorOptions = document.querySelectorAll('.color-option');
@@ -433,36 +422,6 @@
             let paragraphs = [];
             let editingIndex = -1;
             let useBookMode = true; // 默认使用书籍模式
-            const charCountSpan = document.getElementById('charCount');
-            const totalCountSpan = document.getElementById('totalCount');
-            
-            // 计算文本字数（不包括标点符号）
-            function countTextChars(text) {
-                if (!text) return 0;
-                // 移除所有标点符号和空格，只保留中英文字符和数字
-                return text.replace(/[\s\p{P}]/gu, '').length;
-            }
-            
-            // 计算所有段落总字数（不包括标点符号）
-            function countTotalChars(paragraphsArray) {
-                if (!paragraphsArray || !paragraphsArray.length) return 0;
-                return paragraphsArray.reduce((total, paragraph) => {
-                    return total + countTextChars(paragraph);
-                }, 0);
-            }
-            
-            // 更新字数统计
-            function updateCharCount() {
-                const currentText = currentParagraph.value || '';
-                const currentChars = countTextChars(currentText);
-                const totalChars = countTotalChars(paragraphs);
-                
-                charCountSpan.textContent = `当前段落：${currentChars}字`;
-                totalCountSpan.textContent = `总字数：${totalChars}字`;
-            }
-            
-            // 监听文本输入，实时更新字数
-            currentParagraph.addEventListener('input', updateCharCount);
             
             // 颜色选择
             colorOptions.forEach(option => {
@@ -479,15 +438,9 @@
                 bookCoverPreview.style.backgroundColor = color;
                 bookCoverPreview.querySelector('.book-spine').style.backgroundColor = adjustColor(color, -30);
                 
-                // 更新书籍标题
-                const letterTitle = document.getElementById('letterTitle').value || '爱意成册';
-                bookCoverPreview.querySelector('.book-preview-title').textContent = letterTitle;
-                
-                // 更新副标题
                 const recipient = document.getElementById('recipient').value || '特别的你';
-                const subtitle = bookCoverPreview.querySelector('p');
-                if (subtitle) {
-                    subtitle.textContent = '献给 ' + recipient;
+                if (recipient.length > 0) {
+                    bookCoverPreview.querySelector('.book-preview-title').textContent = '献给 ' + recipient;
                 }
             }
             
@@ -524,7 +477,6 @@
                     
                     currentParagraph.value = '';
                     renderParagraphs();
-                    updateCharCount(); // 更新字数统计
                 }
             });
             
@@ -534,7 +486,6 @@
                 
                 if (paragraphs.length === 0) {
                     paragraphsContainer.innerHTML = '<p style="color: #888; text-align: center;">还没有添加段落，请在上方编写并添加</p>';
-                    updateCharCount(); // 更新字数统计
                     return;
                 }
                 
@@ -545,12 +496,6 @@
                     const paragraphText = document.createElement('p');
                     paragraphText.textContent = paragraph;
                     paragraphItem.appendChild(paragraphText);
-                    
-                    // 显示段落字数
-                    const charInfo = document.createElement('small');
-                    charInfo.style.color = '#888';
-                    charInfo.textContent = `${countTextChars(paragraph)}字（不含标点）`;
-                    paragraphItem.appendChild(charInfo);
                     
                     const paragraphActions = document.createElement('div');
                     paragraphActions.className = 'paragraph-actions';
@@ -611,11 +556,6 @@
                 updateBookPreview();
             });
             
-            // 同步情书名称到书籍封面
-            document.getElementById('letterTitle').addEventListener('input', function() {
-                updateBookPreview();
-            });
-            
             // 预览功能
             previewButton.addEventListener('click', function() {
                 if (paragraphs.length === 0) {
@@ -623,14 +563,12 @@
                     return;
                 }
                 
-                const letterTitle = document.getElementById('letterTitle').value || '我的情书';
                 const recipient = document.getElementById('recipient').value || '亲爱的朋友';
                 const signature = document.getElementById('signature').value || '爱你的朋友';
                 const selectedColor = document.querySelector('.color-option.selected').getAttribute('data-color');
                 
                 // 创建预览窗口
                 localStorage.setItem('letterData', JSON.stringify({
-                    letterTitle,
                     recipient,
                     paragraphs,
                     signature,
@@ -650,29 +588,20 @@
                     return;
                 }
                 
-                const letterTitle = document.getElementById('letterTitle').value || '我的情书';
                 const recipient = document.getElementById('recipient').value || '亲爱的朋友';
                 const signature = document.getElementById('signature').value || '爱你的朋友';
                 const selectedColor = document.querySelector('.color-option.selected').getAttribute('data-color');
                 
-                // 创建数据对象
-                const dataObj = {
-                    t: letterTitle,  // 使用短键名减少体积
-                    r: recipient,
-                    p: paragraphs,
-                    s: signature,
-                    c: selectedColor,
-                    b: useBookMode
-                };
+                // 编码数据用于URL参数
+                const data = encodeURIComponent(JSON.stringify({
+                    recipient,
+                    paragraphs,
+                    signature,
+                    color: selectedColor,
+                    bookMode: useBookMode
+                }));
                 
-                // 将数据对象转为JSON字符串
-                const jsonStr = JSON.stringify(dataObj);
-                
-                // 使用LZString压缩数据（比普通编码减少约50-70%体积）
-                const compressedData = LZString.compressToEncodedURIComponent(jsonStr);
-                
-                // 使用压缩后的数据构建URL
-                const url = `${window.location.origin}${window.location.pathname.replace('customize.html', 'index.html')}?d=${compressedData}`;
+                const url = `${window.location.origin}${window.location.pathname.replace('customize.html', 'index.html')}?data=${data}`;
                 
                 // 复制链接到剪贴板
                 const tempInput = document.createElement('input');
@@ -682,13 +611,12 @@
                 document.execCommand('copy');
                 document.body.removeChild(tempInput);
                 
-                alert('链接已压缩并复制到剪贴板，可以分享给朋友了！');
+                alert('链接已复制到剪贴板，可以分享给朋友了！');
             });
             
             // 重置功能
             resetButton.addEventListener('click', function() {
                 if (confirm('确定要重置所有内容吗？')) {
-                    document.getElementById('letterTitle').value = '';
                     document.getElementById('recipient').value = '';
                     document.getElementById('currentParagraph').value = '';
                     document.getElementById('signature').value = '';
@@ -699,13 +627,11 @@
                     editingIndex = -1;
                     addParagraphBtn.textContent = '添加此段落';
                     updateBookPreview();
-                    updateCharCount(); // 更新字数统计
                 }
             });
             
             // 初始化
             updateBookPreview();
-            updateCharCount(); // 初始化字数统计
         });
     </script>
 </body>

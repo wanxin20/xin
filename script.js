@@ -20,7 +20,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const imagePreview = document.getElementById('imagePreview');
     const imagePreviewClose = document.getElementById('imagePreviewClose');
     const downloadImageBtn = document.getElementById('downloadImageBtn');
-    const mobileSaveTip = document.getElementById('mobileSaveTip');
     
     // 分段显示相关变量
     let paragraphs = [];
@@ -33,71 +32,14 @@ document.addEventListener('DOMContentLoaded', function() {
     let pages = [];
     let currentPage = 0;
     let useBookMode = false;
-    let customLetterTitle = '心动情书'; // 全局变量存储自定义情书标题
 
     // 检查URL参数或LocalStorage中是否有自定义数据
     function getCustomData() {
         // 先检查URL参数
         const urlParams = new URLSearchParams(window.location.search);
         const dataParam = urlParams.get('data');
-        const compressedData = urlParams.get('d'); // 新增支持压缩数据格式
         const isPreview = urlParams.get('preview') === 'true';
         
-        // 尝试解析压缩数据格式（优先）
-        if (compressedData) {
-            try {
-                // 确保LZString已加载
-                if (typeof LZString === 'undefined') {
-                    // 如果LZString未加载，动态加载它
-                    const script = document.createElement('script');
-                    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.4.4/lz-string.min.js';
-                    document.head.appendChild(script);
-                    
-                    // 等待脚本加载完成
-                    return new Promise((resolve) => {
-                        script.onload = () => {
-                            try {
-                                const decompressed = LZString.decompressFromEncodedURIComponent(compressedData);
-                                const parsedData = JSON.parse(decompressed);
-                                
-                                // 转换简短字段名为完整字段名
-                                const result = {
-                                    letterTitle: parsedData.t,
-                                    recipient: parsedData.r,
-                                    paragraphs: parsedData.p,
-                                    signature: parsedData.s,
-                                    color: parsedData.c,
-                                    bookMode: parsedData.b
-                                };
-                                resolve(result);
-                            } catch (e) {
-                                console.error('解析压缩数据出错', e);
-                                resolve(null);
-                            }
-                        };
-                        script.onerror = () => resolve(null);
-                    });
-                } else {
-                    // LZString已加载，直接解压
-                    const decompressed = LZString.decompressFromEncodedURIComponent(compressedData);
-                    const parsedData = JSON.parse(decompressed);
-                    
-                    // 转换简短字段名为完整字段名
-                    return {
-                        letterTitle: parsedData.t,
-                        recipient: parsedData.r,
-                        paragraphs: parsedData.p,
-                        signature: parsedData.s,
-                        color: parsedData.c,
-                        bookMode: parsedData.b
-                    };
-                }
-            } catch (e) {
-                console.error('解析压缩数据出错', e);
-            }
-        }
-        
-        // 尝试旧格式数据
         if (dataParam) {
             try {
                 return JSON.parse(decodeURIComponent(dataParam));
@@ -127,17 +69,6 @@ document.addEventListener('DOMContentLoaded', function() {
         const customData = getCustomData();
         
         if (customData) {
-            // 设置页面标题
-            if (customData.letterTitle) {
-                customLetterTitle = customData.letterTitle; // 保存到全局变量
-                document.title = customData.letterTitle;
-                // 同时设置书籍标题
-                const bookTitleElement = document.querySelector('.book-title');
-                if (bookTitleElement) {
-                    bookTitleElement.textContent = customData.letterTitle;
-                }
-            }
-            
             // 检查是否是书籍模式
             useBookMode = customData.bookMode === true;
             
@@ -216,8 +147,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 if (useBookMode) {
                     // 书籍模式：准备书籍页面
-                    const letterTitle = customData.letterTitle || '心动情书';
-                    setupBookPages(recipient, paragraphs, signature, letterTitle);
+                    setupBookPages(recipient, paragraphs, signature);
                 } else if (isStepByStep) {
                     // 分段模式：只显示第一段
                     if (paragraphs.length > 0) {
@@ -270,39 +200,12 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // 设置书籍页面
-    function setupBookPages(recipient, paragraphs, signature, letterTitle) {
+    function setupBookPages(recipient, paragraphs, signature) {
         // 创建页面内容 - 每页只在正面显示一个段落
         const totalPages = paragraphs.length;
         console.log(`总段落数: ${paragraphs.length}, 总页数: ${totalPages}`);
         
-        // 设置首页内容
-        const firstPage = document.querySelector('.first-page');
-        if (firstPage) {
-            // 更新首页标题
-            const bookTitle = firstPage.querySelector('.book-title');
-            if (bookTitle) bookTitle.textContent = letterTitle || '心动情书';
-            
-            // 更新首页副标题
-            const bookSubtitle = firstPage.querySelector('.book-subtitle');
-            if (bookSubtitle) bookSubtitle.textContent = `献给${recipient}`;
-        }
-        
-        // 设置末页内容
-        const lastPageElement = document.getElementById('lastPage');
-        if (lastPageElement) {
-            lastPageElement.style.display = 'none';
-            // 更新签名
-            const lastPageSignature = lastPageElement.querySelector('.signature');
-            if (lastPageSignature) lastPageSignature.textContent = signature;
-        }
-        
-        // 初始设置currentPage为-1，表示在首页
-        currentPage = -1;
-        
         for (let i = 0; i < totalPages; i++) {
-            // 计算当前段落内容字数（不包括标点符号和空格）
-            const textLength = paragraphs[i].replace(/[\s\p{P}]/gu, '').length;
-            
             const page = document.createElement('div');
             page.className = 'page';
             page.style.zIndex = 100 - i;
@@ -330,241 +233,141 @@ document.addEventListener('DOMContentLoaded', function() {
             // 每页都添加收信人标题
             const frontTitle = document.createElement('h2');
             frontTitle.textContent = recipient;
-            
-            // 根据内容长度调整标题样式
-            if (textLength <= 30) {
-                // 内容很少时，标题也适当调整
-                frontTitle.style.fontSize = '28px';
-                frontTitle.style.marginBottom = '40px';
-                frontTitle.style.textAlign = 'center';
-                frontTitle.style.fontWeight = '500';
-            } else if (textLength <= 80) {
-                // 内容适中时的标题样式
-                frontTitle.style.fontSize = '26px';
-                frontTitle.style.marginBottom = '35px';
-                frontTitle.style.textAlign = 'center';
-                frontTitle.style.fontWeight = '500';
-            } else {
-                // 内容较多时使用默认样式
-                frontTitle.style.marginBottom = '25px';
-            }
-            
+            frontTitle.style.marginBottom = '25px';
             pageFront.appendChild(frontTitle);
             
             // 添加内容
             const paragraph = document.createElement('p');
             paragraph.textContent = paragraphs[i];
-            
-            // 根据内容长度动态调整样式
-            if (textLength <= 30) {
-                // 内容很少：大字体，居中显示，添加装饰元素
-                paragraph.style.fontSize = '24px';
-                paragraph.style.textAlign = 'center';
-                paragraph.style.lineHeight = '2.2';
-                paragraph.style.fontWeight = '400';
-                paragraph.style.marginTop = '60px';
-                paragraph.style.marginBottom = '60px';
-                paragraph.style.position = 'relative';
-                
-                // 添加装饰性引号
-                paragraph.style.quotes = '"" ""';
-                paragraph.style.setProperty('--before-content', '"""');
-                paragraph.style.setProperty('--after-content', '"""');
-                
-                // 添加一些装饰性的间距
-                pageFront.style.justifyContent = 'center';
-                pageFront.style.alignItems = 'center';
-                pageFront.style.display = 'flex';
-                pageFront.style.flexDirection = 'column';
-                
-                // 为短内容添加优雅的装饰边框
-                pageFront.style.background = 'linear-gradient(145deg, #fafafa, #ffffff)';
-                pageFront.style.position = 'relative';
-            } else if (textLength <= 80) {
-                // 内容适中：稍大字体，居中对齐
-                paragraph.style.fontSize = '20px';
-                paragraph.style.textAlign = 'center';
-                paragraph.style.lineHeight = '2.0';
-                paragraph.style.marginTop = '40px';
-                paragraph.style.marginBottom = '40px';
-                pageFront.style.justifyContent = 'center';
-                pageFront.style.alignItems = 'center';
-                pageFront.style.display = 'flex';
-                pageFront.style.flexDirection = 'column';
-            } else if (textLength <= 150) {
-                // 内容较多：正常字体，左对齐
-                paragraph.style.fontSize = '18px';
-                paragraph.style.textAlign = 'justify';
-                paragraph.style.lineHeight = '1.8';
-                paragraph.style.marginTop = '20px';
-                paragraph.style.marginBottom = '20px';
-            } else {
-                // 内容很多：较小字体，确保能完整显示
-                paragraph.style.fontSize = '16px';
-                paragraph.style.textAlign = 'justify';
-                paragraph.style.lineHeight = '1.7';
-                paragraph.style.marginTop = '15px';
-                paragraph.style.marginBottom = '15px';
-            }
-            
             pageFront.appendChild(paragraph);
-            console.log(`页面 ${i+1} 内容: ${paragraphs[i].substring(0, 20)}..., 字数: ${textLength}`);
+            console.log(`页面 ${i+1} 内容: ${paragraphs[i].substring(0, 20)}...`);
             
             // 如果是最后一页，添加签名
             if (i === paragraphs.length - 1) {
                 const signatureEl = document.createElement('p');
                 signatureEl.className = 'signature';
                 signatureEl.textContent = signature;
-                
-                // 根据内容长度调整签名样式
-                if (textLength <= 30) {
-                    // 内容很少时，签名居中显示
-                    signatureEl.style.textAlign = 'center';
-                    signatureEl.style.fontSize = '20px';
-                    signatureEl.style.marginTop = '60px';
-                } else if (textLength <= 80) {
-                    // 内容适中时，签名居中
-                    signatureEl.style.textAlign = 'center';
-                    signatureEl.style.fontSize = '20px';
-                    signatureEl.style.marginTop = '40px';
-                } else {
-                    // 内容较多时，签名右对齐（保持默认样式）
-                    signatureEl.style.textAlign = 'right';
-                    signatureEl.style.marginTop = '30px';
-                }
-                
                 pageFront.appendChild(signatureEl);
+                console.log('添加签名到最后一页');
             }
             
+            // 添加装饰
+            const decoration = document.createElement('div');
+            decoration.className = 'page-decoration top-left';
+            pageFront.appendChild(decoration);
+            
+            // 添加波浪装饰
+            const wave = document.createElement('div');
+            wave.className = 'wave-decoration';
+            pageFront.appendChild(wave);
+            
+            // 组装页面 - 只添加正面
             pageContent.appendChild(pageFront);
             page.appendChild(pageContent);
             
-            // 初始状态下隐藏此页面
-            page.style.display = 'none';
-            
-            // 将页面添加到书籍容器中
+            // 添加到DOM
             book.appendChild(page);
             pages.push(page);
-            
-            // 添加翻页点击事件
-            page.addEventListener('click', function(e) {
-                // 防止点击页面内容元素时触发翻页
-                if (e.target.closest('.page-content')) {
-                    return;
-                }
-                
-                if (i < totalPages - 1) {
-                    // 如果不是最后一页，点击进入下一页
-                    this.style.display = 'none';
-                    pages[i + 1].style.display = 'block';
-                    currentPage = i + 1;
-                    updateBookNavigation();
-                } else {
-                    // 如果是最后一页，点击显示结尾页
-                    this.style.display = 'none';
-                    lastPage.style.display = 'flex';
-                    currentPage = pages.length;
-                    updateBookNavigation();
-                }
-                
-                playPageTurnSound();
-            });
         }
         
-        // 更新导航按钮状态
+        // 更新最后一页
+        lastPage.style.display = 'flex';
+        
+        // 为每个页面添加事件
+        pages.forEach((page, index) => {
+            // 添加点击事件
+            page.addEventListener('click', function() {
+                flipPage(this);
+            });
+            
+            // 添加3D悬停效果
+            page.addEventListener('mousemove', function(e) {
+                if (!this.classList.contains('flipped')) {
+                    const rect = this.getBoundingClientRect();
+                    const x = e.clientX - rect.left; // x在元素内的位置
+                    const y = e.clientY - rect.top;  // y在元素内的位置
+                    
+                    // 计算旋转角度，最大5度
+                    const rotateY = ((x / rect.width) - 0.5) * 5;
+                    const rotateX = ((y / rect.height) - 0.5) * -3;
+                    
+                    // 应用3D转换
+                    this.style.transform = `perspective(1500px) rotateY(${rotateY}deg) rotateX(${rotateX}deg)`;
+                } else {
+                    this.style.transform = 'rotateY(-180deg)';
+                }
+            });
+            
+            // 移出时恢复正常
+            page.addEventListener('mouseleave', function() {
+                if (!this.classList.contains('flipped')) {
+                    this.style.transform = '';
+                } else {
+                    this.style.transform = 'rotateY(-180deg)';
+                }
+            });
+        });
+        
+        // 更新导航按钮
         updateBookNavigation();
     }
     
-    // 上一页函数
+    // 翻页效果
+    function flipPage(page) {
+        if (!page) return;
+        
+        const index = parseInt(page.dataset.index);
+        const isFlipped = page.classList.contains('flipped');
+        
+        // 播放翻页声音
+        playPageTurnSound();
+        
+        console.log(`翻页: 页面索引 ${index}, 当前状态: ${isFlipped ? '已翻过' : '未翻过'}`);
+        
+        if (isFlipped) {
+            // 如果翻回去，只翻当前这一页
+            page.classList.remove('flipped');
+            setTimeout(() => {
+                page.style.transform = '';
+            }, 50);
+            currentPage = index;
+        } else {
+            // 如果翻过去，只翻当前这一页
+            page.classList.add('flipped');
+            currentPage = index + 1;
+        }
+        
+        updateBookNavigation();
+    }
+    
+    // 切换到上一页
     function prevPage() {
-        if (currentPage > -1) {
-            if (currentPage === pages.length) {
-                // 如果当前是最后一页，返回到最后一个内容页
-                lastPage.style.display = 'none';
-                pages[pages.length - 1].style.display = 'block';
-            } else if (currentPage === 0) {
-                // 如果当前是第一页内容，返回到首页
-                pages[0].style.display = 'none';
-                document.querySelector('.first-page').style.display = 'flex';
-                currentPage = -1;
-                updateBookNavigation();
-                playPageTurnSound();
-                return;
-            } else if (currentPage === -1) {
-                // 如果当前是首页，返回到信封
-                document.querySelector('.first-page').style.display = 'none';
-                envelope.style.display = 'block';
-                instructions.style.display = 'block';
-                bookContainer.style.display = 'none';
-                bookNavigation.style.display = 'none';
-                isOpen = true;
-                return;
-            } else {
-                // 隐藏当前页，显示上一页
-                pages[currentPage].style.display = 'none';
-                pages[currentPage - 1].style.display = 'block';
-            }
-            
+        if (currentPage > 0) {
+            playPageTurnSound();
+            pages[currentPage - 1].classList.remove('flipped');
+            pages[currentPage - 1].style.transform = '';
             currentPage--;
             updateBookNavigation();
-            playPageTurnSound();
-        } else if (currentPage === -1) {
-            // 如果当前是首页，返回到信封
-            document.querySelector('.first-page').style.display = 'none';
-            envelope.style.display = 'block';
-            instructions.style.display = 'block';
-            bookContainer.style.display = 'none';
-            bookNavigation.style.display = 'none';
-            isOpen = true;
         }
     }
     
-    // 下一页函数
+    // 切换到下一页
     function nextPage() {
         if (currentPage < pages.length) {
-            // 隐藏当前页
-            if (currentPage === -1) {
-                // 如果是首页，隐藏首页显示第一页内容
-                document.querySelector('.first-page').style.display = 'none';
-                pages[0].style.display = 'block';
-            } else if (currentPage === pages.length - 1) {
-                // 如果是最后一个内容页，显示结尾页
-                pages[currentPage].style.display = 'none';
-                lastPage.style.display = 'flex';
-            } else {
-                // 常规翻页
-                pages[currentPage].style.display = 'none';
-                pages[currentPage + 1].style.display = 'block';
-            }
-            
+            playPageTurnSound();
+            pages[currentPage].classList.add('flipped');
             currentPage++;
             updateBookNavigation();
-            playPageTurnSound();
         }
     }
     
     // 更新书籍导航按钮状态
     function updateBookNavigation() {
-        if (prevBtn && nextBtn) {
-            // 如果当前是首页（-1）或之前，禁用上一页按钮
-            prevBtn.disabled = currentPage <= -1;
-            // 如果当前是最后一页或之后，禁用下一页按钮
-            nextBtn.disabled = currentPage >= pages.length;
-            
-            // 特殊情况：如果用户在首页，修改上一页按钮文本
-            if (currentPage === -1) {
-                prevBtn.textContent = '返回信封';
-            } else {
-                prevBtn.textContent = '← 上一页';
-            }
-            
-            // 特殊情况：如果用户在最后一个内容页，修改下一页按钮文本
-            if (currentPage === pages.length - 1) {
-                nextBtn.textContent = '进入末页 →';
-            } else {
-                nextBtn.textContent = '下一页 →';
-            }
-        }
+        prevBtn.disabled = currentPage === 0;
+        nextBtn.disabled = currentPage >= pages.length;
+        
+        // 额外显示日志，帮助调试
+        console.log(`当前页面索引: ${currentPage}, 总页数: ${pages.length}`);
     }
     
     // 显示指定的段落(原分段模式使用)
@@ -644,21 +447,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 instructions.style.display = 'none';
                 bookContainer.style.display = 'block';
                 bookNavigation.style.display = 'flex';
-                // 显示首页
-                document.querySelector('.first-page').style.display = 'flex';
-                // 隐藏所有页面，然后在点击首页后显示第一页内容
-                pages.forEach(page => {
-                    page.style.display = 'none';
-                });
-                
-                // 给首页添加点击事件
-                document.querySelector('.first-page').addEventListener('click', function() {
-                    this.style.display = 'none';
-                    if (pages.length > 0) {
-                        pages[0].style.display = 'block';
-                        updateBookNavigation();
-                    }
-                }, { once: true });
             }, 1000);
         }
     }
@@ -719,9 +507,9 @@ document.addEventListener('DOMContentLoaded', function() {
         tempContainer.style.backgroundColor = 'white';
         tempContainer.style.fontFamily = "'Microsoft YaHei', '微软雅黑', sans-serif";
         
-        // 添加标题 - 使用自定义情书名称
+        // 添加标题
         const title = document.createElement('h1');
-        title.textContent = customLetterTitle;
+        title.textContent = '心动情书';
         title.style.color = 'var(--book-color)';
         title.style.textAlign = 'center';
         title.style.fontSize = '32px';
@@ -795,35 +583,8 @@ document.addEventListener('DOMContentLoaded', function() {
             imagePreview.src = canvas.toDataURL('image/png');
             imagePreviewContainer.style.display = 'flex';
             
-            // 检测是否为移动设备，如果是则显示保存提示
-            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-            
-            if (isMobile && mobileSaveTip) {
-                mobileSaveTip.style.display = 'block';
-                // 根据具体环境调整提示文本
-                if (/MicroMessenger/i.test(navigator.userAgent)) {
-                    mobileSaveTip.innerHTML = '📱 微信用户：长按上方图片选择"保存图片"';
-                } else if (/QQ/i.test(navigator.userAgent)) {
-                    mobileSaveTip.innerHTML = '📱 QQ用户：长按上方图片选择"保存到相册"';
-                } else {
-                    mobileSaveTip.innerHTML = '📱 手机用户：长按上方图片即可保存到相册';
-                }
-                
-                // 修改下载按钮文本
-                if (downloadImageBtn) {
-                    downloadImageBtn.textContent = '保存说明';
-                }
-            } else if (mobileSaveTip) {
-                mobileSaveTip.style.display = 'none';
-                // 桌面端保持原有按钮文本
-                if (downloadImageBtn) {
-                    downloadImageBtn.textContent = '下载图片';
-                }
-            }
-            
-            // 保存图片数据以供下载，同时保存文件名
+            // 保存图片数据以供下载
             imagePreview.dataset.download = canvas.toDataURL('image/png').replace('image/png', 'image/octet-stream');
-            imagePreview.dataset.filename = customLetterTitle;
             
             // 从DOM中移除临时容器
             document.body.removeChild(tempContainer);
@@ -834,118 +595,12 @@ document.addEventListener('DOMContentLoaded', function() {
     function downloadImage() {
         if (!imagePreview.src) return;
         
-        // 检测是否为移动设备
-        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-        
-        // 检测是否在微信内置浏览器中
-        const isWeChat = /MicroMessenger/i.test(navigator.userAgent);
-        
-        // 检测是否在QQ内置浏览器中
-        const isQQ = /QQ/i.test(navigator.userAgent);
-        
-        // 检测是否在其他app内置浏览器中
-        const isInApp = isWeChat || isQQ || (isMobile && !window.chrome);
-        
-        if (isInApp || isMobile) {
-            // 对于手机端或app内置浏览器，显示特殊提示
-            showMobileDownloadInstructions();
-        } else {
-            // 对于桌面浏览器，使用传统下载方式
-            const link = document.createElement('a');
-            // 使用自定义的情书名称或默认名称
-            const customFileName = imagePreview.dataset.filename || '心动情书';
-            link.download = customFileName + '_' + new Date().getTime() + '.png';
-            link.href = imagePreview.dataset.download;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        }
-    }
-    
-    // 显示移动端下载说明
-    function showMobileDownloadInstructions() {
-        // 创建说明弹窗
-        const instructionModal = document.createElement('div');
-        instructionModal.style.cssText = `
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.8);
-            z-index: 10000;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            flex-direction: column;
-            padding: 20px;
-        `;
-        
-        const instructionContent = document.createElement('div');
-        instructionContent.style.cssText = `
-            background-color: white;
-            padding: 30px;
-            border-radius: 10px;
-            text-align: center;
-            max-width: 350px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-        `;
-        
-        // 检测具体环境并提供相应说明
-        let instructions = '';
-        if (/MicroMessenger/i.test(navigator.userAgent)) {
-            instructions = `
-                <h3 style="color: #e74c3c; margin-bottom: 15px;">📱 微信中保存图片</h3>
-                <p style="line-height: 1.6; margin-bottom: 15px;">1. <strong>长按</strong>下方图片</p>
-                <p style="line-height: 1.6; margin-bottom: 15px;">2. 选择"<strong>保存图片</strong>"</p>
-                <p style="color: #666; font-size: 14px;">图片将保存到您的相册中</p>
-            `;
-        } else if (/QQ/i.test(navigator.userAgent)) {
-            instructions = `
-                <h3 style="color: #e74c3c; margin-bottom: 15px;">📱 QQ中保存图片</h3>
-                <p style="line-height: 1.6; margin-bottom: 15px;">1. <strong>长按</strong>下方图片</p>
-                <p style="line-height: 1.6; margin-bottom: 15px;">2. 选择"<strong>保存到相册</strong>"</p>
-                <p style="color: #666; font-size: 14px;">图片将保存到您的相册中</p>
-            `;
-        } else {
-            instructions = `
-                <h3 style="color: #e74c3c; margin-bottom: 15px;">📱 手机中保存图片</h3>
-                <p style="line-height: 1.6; margin-bottom: 15px;">1. <strong>长按</strong>下方图片</p>
-                <p style="line-height: 1.6; margin-bottom: 15px;">2. 选择"<strong>保存图片</strong>"或"<strong>下载图片</strong>"</p>
-                <p style="color: #666; font-size: 14px;">图片将保存到您的相册或下载文件夹中</p>
-            `;
-        }
-        
-        instructionContent.innerHTML = instructions;
-        
-        // 添加关闭按钮
-        const closeBtn = document.createElement('button');
-        closeBtn.textContent = '我知道了';
-        closeBtn.style.cssText = `
-            background-color: #e74c3c;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 5px;
-            margin-top: 20px;
-            cursor: pointer;
-            font-size: 16px;
-        `;
-        
-        closeBtn.onclick = function() {
-            document.body.removeChild(instructionModal);
-        };
-        
-        instructionContent.appendChild(closeBtn);
-        instructionModal.appendChild(instructionContent);
-        document.body.appendChild(instructionModal);
-        
-        // 点击背景也可以关闭
-        instructionModal.onclick = function(e) {
-            if (e.target === instructionModal) {
-                document.body.removeChild(instructionModal);
-            }
-        };
+        const link = document.createElement('a');
+        link.download = '心动情书_' + new Date().getTime() + '.png';
+        link.href = imagePreview.dataset.download;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
     }
 
     // 分享按钮点击事件
@@ -1037,19 +692,4 @@ document.addEventListener('DOMContentLoaded', function() {
     createNewBtn && createNewBtn.addEventListener('click', function() {
         window.location.href = 'welcome.html';
     });
-    
-    // 计算文本字数（不包括标点符号）
-    function countTextChars(text) {
-        if (!text) return 0;
-        // 移除所有标点符号和空格，只保留中英文字符和数字
-        return text.replace(/[\s\p{P}]/gu, '').length;
-    }
-    
-    // 计算所有段落总字数（不包括标点符号）
-    function countTotalChars(paragraphs) {
-        if (!paragraphs || !paragraphs.length) return 0;
-        return paragraphs.reduce((total, paragraph) => {
-            return total + countTextChars(paragraph);
-        }, 0);
-    }
 }); 

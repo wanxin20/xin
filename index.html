@@ -2,8 +2,8 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>写给小鱼</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>情书</title>
     <link rel="stylesheet" href="styles.css">
     <style>
         :root {
@@ -35,7 +35,7 @@
         
         .page {
             position: absolute;
-            width: 100%;
+            width: 65%;
             height: 100%;
             top: 0;
             right: 0;
@@ -44,11 +44,11 @@
             box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
             transform-style: preserve-3d;
             transition: transform 1.2s cubic-bezier(0.645, 0.045, 0.355, 1.000);
-            border-radius: 5px;
+            border-radius: 0 5px 5px 0;
             overflow: hidden;
             cursor: pointer;
             backface-visibility: hidden;
-            aspect-ratio: 1.41;
+            aspect-ratio: 0.71;
         }
         
         .page::before {
@@ -256,7 +256,7 @@
         
         .first-page, .last-page {
             position: absolute;
-            width: 100%;
+            width: 35%;
             height: 100%;
             background-color: #f8e9e9;
             box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
@@ -264,7 +264,7 @@
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            border-radius: 5px;
+            border-radius: 5px 0 0 5px;
             padding: 30px;
             box-sizing: border-box;
             z-index: 1;
@@ -273,18 +273,21 @@
         .first-page {
             left: 0;
             background: linear-gradient(135deg, #fff3f3, #ffe6e6);
-            border-right: none;
-            box-shadow: inset 0 0 30px rgba(200, 80, 80, 0.1);
-            display: none;
+            border-right: 1px solid #f1d1d1;
+            box-shadow: 
+                inset 0 0 30px rgba(200, 80, 80, 0.1),
+                5px 0 15px rgba(0, 0, 0, 0.1);
         }
         
         .last-page {
             right: 0;
             background: linear-gradient(135deg, #fff3f3, #ffe6e6);
-            border-left: none;
+            border-left: 1px solid #f1d1d1;
             text-align: center;
             display: none;
-            box-shadow: inset 0 0 30px rgba(200, 80, 80, 0.1);
+            box-shadow: 
+                inset 0 0 30px rgba(200, 80, 80, 0.1),
+                -5px 0 15px rgba(0, 0, 0, 0.1);
         }
         
         .book-title {
@@ -383,7 +386,16 @@
         }
         
         .book-spine-shadow {
-            display: none;
+            position: absolute;
+            top: 0;
+            left: 35%;
+            width: 20px;
+            height: 100%;
+            background: linear-gradient(to right, 
+                rgba(0,0,0,0.2) 0%, 
+                rgba(0,0,0,0) 100%);
+            pointer-events: none;
+            z-index: 5;
         }
         
         .save-image-btn {
@@ -427,12 +439,6 @@
             box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
             border: 10px solid white;
             background-color: white;
-            -webkit-user-select: none;
-            -moz-user-select: none;
-            -ms-user-select: none;
-            user-select: none;
-            -webkit-touch-callout: default;
-            -webkit-long-press: enabled;
         }
         
         .image-preview-close {
@@ -442,7 +448,6 @@
             color: white;
             font-size: 30px;
             cursor: pointer;
-            z-index: 1001;
         }
         
         .image-preview-download {
@@ -454,15 +459,6 @@
             border-radius: 5px;
             cursor: pointer;
             font-size: 16px;
-        }
-        
-        .mobile-save-tip {
-            color: white;
-            text-align: center;
-            margin-top: 10px;
-            font-size: 14px;
-            padding: 0 20px;
-            line-height: 1.4;
         }
         
         .create-new-btn {
@@ -500,69 +496,22 @@
         
         @media (max-width: 768px) {
             .book-container {
-                height: 100vh;
-                max-height: 100vh;
-                width: 100%;
-                max-width: 100%;
-                margin: 0;
-                padding: 0;
-            }
-            
-            .book {
-                height: 100%;
-                width: 100%;
-            }
-            
-            .page {
-                width: 100%;
-                height: 100%;
-                border-radius: 0;
-            }
-            
-            .first-page, .last-page {
-                width: 100%;
-                height: 100%;
-                border-radius: 0;
-                padding: 20px;
+                height: 450px;
             }
             
             .page-front, .page-back {
                 padding: 25px 30px;
-                height: 100%;
-                width: 100%;
-                box-sizing: border-box;
             }
             
             .page-content h2 {
                 font-size: 20px;
-                max-width: 100%;
+                max-width: 400px;
                 margin-bottom: 15px;
             }
             
             .page-content p {
                 font-size: 14px;
-                max-width: 100%;
-            }
-            
-            /* 移动端动态字体调整 */
-            .page-front p[style*="font-size: 24px"] {
-                font-size: 20px !important;
-            }
-            
-            .page-front p[style*="font-size: 20px"] {
-                font-size: 18px !important;
-            }
-            
-            .page-front p[style*="font-size: 18px"] {
-                font-size: 16px !important;
-            }
-            
-            .page-front h2[style*="font-size: 28px"] {
-                font-size: 22px !important;
-            }
-            
-            .page-front h2[style*="font-size: 26px"] {
-                font-size: 20px !important;
+                max-width: 400px;
             }
             
             .signature {
@@ -574,20 +523,11 @@
                 bottom: 10px;
                 font-size: 11px;
             }
-            
-            .book-navigation {
-                position: fixed;
-                bottom: 20px;
-                left: 0;
-                width: 100%;
-                z-index: 1000;
-            }
         }
         
         @media (max-width: 480px) {
             .book-container {
-                height: 100vh;
-                max-height: 100vh;
+                height: 340px;
             }
             
             .page-front, .page-back {
@@ -606,14 +546,14 @@
             
             .page-content h2 {
                 font-size: 18px;
-                max-width: 100%;
+                max-width: 280px;
                 margin-bottom: 12px;
             }
             
             .page-content p {
                 font-size: 13px;
                 line-height: 1.6;
-                max-width: 100%;
+                max-width: 280px;
             }
             
             .page-decoration {
@@ -643,19 +583,6 @@
             
             .page-back .page-number {
                 left: 15px;
-            }
-            
-            .envelope {
-                width: 100%;
-                height: auto;
-                aspect-ratio: 1.5;
-                margin: 20px 0;
-            }
-            
-            .card {
-                width: calc(100% - 40px);
-                max-height: calc(100vh - 150px);
-                overflow-y: auto;
             }
         }
     </style>
@@ -689,9 +616,9 @@
                 <div class="first-page">
                     <div class="bookmark"></div>
                     <div class="page-decoration top-left"></div>
-                    <h1 class="book-title">5.20的信</h1>
-                    <p class="book-subtitle">献给尊敬的懒洋洋大王</p>
-                    <p>点击下一页开始阅读哦</p>
+                    <h1 class="book-title">心动情书</h1>
+                    <p class="book-subtitle">献给特别的你</p>
+                    <p>点击右侧页面开始阅读</p>
                     <div class="page-decoration bottom-right"></div>
                     <div class="wave-decoration"></div>
                 </div>
@@ -699,8 +626,8 @@
                 <div class="last-page" id="lastPage">
                     <div class="page-decoration top-left"></div>
                     <h2>感谢阅读</h2>
-                    <p>希望这封信懒洋洋大王大人能喜欢</p>
-                    <p class="signature" id="bookSignature">爱你哦</p>
+                    <p>希望这封情书能传达我的心意</p>
+                    <p class="signature" id="bookSignature">爱你的朋友</p>
                     <button id="saveImageBtn" class="save-image-btn">保存为图片 💾</button>
                     <div class="page-decoration bottom-right"></div>
                     <div class="wave-decoration"></div>
@@ -717,34 +644,14 @@
         <div class="image-preview-close" id="imagePreviewClose">×</div>
         <img id="imagePreview" class="image-preview">
         <button id="downloadImageBtn" class="image-preview-download">下载图片</button>
-        <div class="mobile-save-tip" id="mobileSaveTip" style="display: none;">
-            📱 手机用户：长按上方图片即可保存到相册
-        </div>
     </div>
     
-    <a href="customize.html" id="createNewBtn" class="create-new-btn">
+    <button id="createNewBtn" class="create-new-btn">
         <span class="create-new-btn-icon"></span>
         创建新情书
-    </a>
+    </button>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.4.4/lz-string.min.js"></script>
     <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
-    <script>
-        // 检查URL是否包含分享参数
-        window.addEventListener('DOMContentLoaded', function() {
-            // 获取URL查询参数
-            const urlParams = new URLSearchParams(window.location.search);
-            
-            // 如果URL中包含任何参数，认为这是一个分享链接
-            if (urlParams.toString() !== '') {
-                // 隐藏"创建新情书"按钮
-                const createNewBtn = document.getElementById('createNewBtn');
-                if (createNewBtn) {
-                    createNewBtn.style.display = 'none';
-                }
-            }
-        });
-    </script>
     <script src="script.js"></script>
 </body>
 </html> 
