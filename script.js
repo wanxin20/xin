@@ -892,9 +892,22 @@ document.addEventListener('DOMContentLoaded', function() {
         generateCompleteImage();
     });
     
+    // 查看图片按钮点击事件 - 新增功能
+    const viewImageBtn = document.getElementById('viewImageBtn');
+    viewImageBtn && viewImageBtn.addEventListener('click', function() {
+        generateCompleteImageForView();
+    });
+    
     // 图片预览关闭按钮点击事件
     imagePreviewClose && imagePreviewClose.addEventListener('click', function() {
         imagePreviewContainer.style.display = 'none';
+        // 恢复下载按钮和移动端保存提示的显示状态
+        if (downloadImageBtn) {
+            downloadImageBtn.style.display = 'block';
+        }
+        if (mobileSaveTip) {
+            mobileSaveTip.style.display = 'block';
+        }
     });
     
     // 下载图片按钮点击事件
@@ -1016,6 +1029,103 @@ document.addEventListener('DOMContentLoaded', function() {
             // 保存图片数据以供下载，同时保存文件名
             imagePreview.dataset.download = canvas.toDataURL('image/png').replace('image/png', 'image/octet-stream');
             imagePreview.dataset.filename = customLetterTitle;
+            
+            // 从DOM中移除临时容器
+            document.body.removeChild(tempContainer);
+        });
+    }
+    
+    // 生成完整情书图片（仅用于查看）
+    function generateCompleteImageForView() {
+        // 创建一个临时容器来放置完整内容
+        const tempContainer = document.createElement('div');
+        tempContainer.style.width = '800px';
+        tempContainer.style.padding = '40px';
+        tempContainer.style.backgroundColor = 'white';
+        tempContainer.style.fontFamily = "'Microsoft YaHei', '微软雅黑', sans-serif";
+        
+        // 添加标题 - 使用自定义情书名称
+        const title = document.createElement('h1');
+        title.textContent = customLetterTitle;
+        title.style.color = 'var(--book-color)';
+        title.style.textAlign = 'center';
+        title.style.fontSize = '32px';
+        title.style.marginBottom = '30px';
+        tempContainer.appendChild(title);
+        
+        // 添加收信人
+        const recipient = document.createElement('h2');
+        // 获取正确的收信人
+        let recipientName = '';
+        // 尝试从页面内容获取
+        const firstPageTitle = pages[0]?.querySelector('.page-front h2');
+        if (firstPageTitle) {
+            recipientName = firstPageTitle.textContent;
+        } else if (contentElement && contentElement.querySelector('h2')) {
+            recipientName = contentElement.querySelector('h2').textContent;
+        } else {
+            recipientName = '特别的你';
+        }
+        
+        recipient.textContent = recipientName;
+        recipient.style.fontSize = '24px';
+        recipient.style.marginBottom = '20px';
+        recipient.style.color = 'var(--book-color)';
+        tempContainer.appendChild(recipient);
+        
+        // 添加所有段落内容
+        paragraphs.forEach(paragraph => {
+            const p = document.createElement('p');
+            p.textContent = paragraph;
+            p.style.marginBottom = '20px';
+            p.style.fontSize = '18px';
+            p.style.lineHeight = '1.8';
+            tempContainer.appendChild(p);
+        });
+        
+        // 添加署名
+        const signature = document.createElement('p');
+        signature.textContent = bookSignature.textContent;
+        signature.style.textAlign = 'right';
+        signature.style.marginTop = '40px';
+        signature.style.fontStyle = 'italic';
+        signature.style.fontSize = '24px';
+        signature.style.color = 'var(--book-color)';
+        tempContainer.appendChild(signature);
+        
+        // 添加页脚
+        const footer = document.createElement('div');
+        footer.style.marginTop = '50px';
+        footer.style.borderTop = '1px solid #eee';
+        footer.style.paddingTop = '20px';
+        footer.style.textAlign = 'center';
+        footer.style.color = '#888';
+        footer.style.fontSize = '14px';
+        footer.textContent = '制作于 ' + new Date().toLocaleDateString();
+        tempContainer.appendChild(footer);
+        
+        // 将临时容器添加到文档中（不可见）
+        tempContainer.style.position = 'absolute';
+        tempContainer.style.left = '-9999px';
+        document.body.appendChild(tempContainer);
+        
+        // 使用html2canvas生成图片
+        html2canvas(tempContainer, {
+            scale: 2,
+            useCORS: true,
+            backgroundColor: '#ffffff'
+        }).then(canvas => {
+            // 显示预览
+            imagePreview.src = canvas.toDataURL('image/png');
+            imagePreviewContainer.style.display = 'flex';
+            
+            // 隐藏下载按钮和移动端保存提示（仅查看模式）
+            if (downloadImageBtn) {
+                downloadImageBtn.style.display = 'none';
+            }
+            if (mobileSaveTip) {
+                mobileSaveTip.style.display = 'none';
+            }
             
             // 从DOM中移除临时容器
             document.body.removeChild(tempContainer);
@@ -1436,7 +1546,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // 设置内容
         flowerContentText.innerHTML = `<p>${currentParagraph}</p>`;
         
-        // 如果是最后一段，添加签名
+        // 如果是最后一段，添加签名和操作按钮
         if (currentFlowerParagraph === flowerParagraphs.length - 1) {
             const signatureEl = document.createElement('p');
             signatureEl.className = 'signature';
@@ -1446,6 +1556,65 @@ document.addEventListener('DOMContentLoaded', function() {
             signatureEl.style.fontStyle = 'italic';
             signatureEl.textContent = document.querySelector('.signature')?.textContent || '爱你的朋友';
             flowerContentText.appendChild(signatureEl);
+            
+            // 添加操作按钮容器
+            const actionContainer = document.createElement('div');
+            actionContainer.style.display = 'flex';
+            actionContainer.style.flexDirection = 'column';
+            actionContainer.style.alignItems = 'center';
+            actionContainer.style.gap = '12px';
+            actionContainer.style.marginTop = '25px';
+            
+            // 添加查看图片按钮
+            const viewImageBtn = document.createElement('button');
+            viewImageBtn.textContent = '查看图片 🖼️';
+            viewImageBtn.style.padding = '10px 20px';
+            viewImageBtn.style.backgroundColor = 'var(--book-color)';
+            viewImageBtn.style.color = 'white';
+            viewImageBtn.style.border = 'none';
+            viewImageBtn.style.borderRadius = '25px';
+            viewImageBtn.style.cursor = 'pointer';
+            viewImageBtn.style.fontSize = '14px';
+            viewImageBtn.style.minWidth = '120px';
+            viewImageBtn.style.transition = 'all 0.3s ease';
+            viewImageBtn.addEventListener('click', function() {
+                generateCompleteImageForView();
+            });
+            
+            // 添加保存图片按钮
+            const saveImageBtn = document.createElement('button');
+            saveImageBtn.textContent = '保存为图片 💾';
+            saveImageBtn.style.padding = '10px 20px';
+            saveImageBtn.style.backgroundColor = 'var(--book-color)';
+            saveImageBtn.style.color = 'white';
+            saveImageBtn.style.border = 'none';
+            saveImageBtn.style.borderRadius = '25px';
+            saveImageBtn.style.cursor = 'pointer';
+            saveImageBtn.style.fontSize = '14px';
+            saveImageBtn.style.minWidth = '120px';
+            saveImageBtn.style.transition = 'all 0.3s ease';
+            saveImageBtn.addEventListener('click', function() {
+                generateCompleteImage();
+            });
+            
+            // 添加按钮悬停效果
+            [viewImageBtn, saveImageBtn].forEach(btn => {
+                btn.addEventListener('mouseenter', function() {
+                    this.style.backgroundColor = 'var(--book-color-dark)';
+                    this.style.transform = 'translateY(-2px)';
+                });
+                btn.addEventListener('mouseleave', function() {
+                    this.style.backgroundColor = 'var(--book-color)';
+                    this.style.transform = 'translateY(0)';
+                });
+            });
+            
+            // 将按钮添加到容器
+            actionContainer.appendChild(viewImageBtn);
+            actionContainer.appendChild(saveImageBtn);
+            
+            // 将容器添加到内容区域
+            flowerContentText.appendChild(actionContainer);
         }
         
         // 更新导航按钮状态
