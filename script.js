@@ -48,6 +48,10 @@ document.addEventListener('DOMContentLoaded', function() {
     let useFlowerMode = false; // 新增花朵模式标识
     let customLetterTitle = '心动情书'; // 全局变量存储自定义情书标题
     
+    // 全局颜色变量，用于图片生成
+    let currentColor = '#e74c3c';
+    let currentGradient = null;
+    
     // 花朵模式相关变量
     let flowerParagraphs = [];
     let currentFlowerParagraph = 0;
@@ -355,6 +359,9 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // 应用颜色（支持渐变色）
             if (customData.color) {
+                // 保存颜色信息到全局变量
+                currentColor = customData.color;
+                currentGradient = customData.gradient;
                 applyColor(customData.color, customData.gradient);
             }
             
@@ -920,18 +927,118 @@ document.addEventListener('DOMContentLoaded', function() {
         // 创建一个临时容器来放置完整内容
         const tempContainer = document.createElement('div');
         tempContainer.style.width = '800px';
-        tempContainer.style.padding = '40px';
-        tempContainer.style.backgroundColor = 'white';
+        tempContainer.style.padding = '50px';
+        tempContainer.style.position = 'relative';
         tempContainer.style.fontFamily = "'Microsoft YaHei', '微软雅黑', sans-serif";
+        tempContainer.style.color = '#333';
+        tempContainer.style.lineHeight = '1.6';
+        
+        // 获取当前应用的颜色 - 优先使用全局变量
+        let color = currentColor;
+        let gradient = currentGradient;
+        
+        console.log('保存图片时获取的颜色信息:', { currentColor, currentGradient, color, gradient });
+        
+        // 如果全局变量没有值，尝试从页面元素中获取
+        if (!color || color === '#e74c3c') {
+            // 尝试从CSS变量中获取书籍颜色
+            const bookColor = getComputedStyle(document.documentElement).getPropertyValue('--book-color').trim();
+            if (bookColor) {
+                color = bookColor;
+            } else {
+                // 尝试从信封前面获取颜色
+                const envelopeFront = document.querySelector('.front');
+                if (envelopeFront) {
+                    const frontStyle = window.getComputedStyle(envelopeFront);
+                    const backgroundColor = frontStyle.backgroundColor;
+                    const backgroundImage = frontStyle.backgroundImage;
+                    
+                    if (backgroundImage && backgroundImage !== 'none') {
+                        // 如果是渐变背景
+                        gradient = backgroundImage;
+                        color = 'gradient';
+                    } else if (backgroundColor && backgroundColor !== 'rgba(0, 0, 0, 0)' && backgroundColor !== 'transparent') {
+                        // 如果是单色背景，转换rgb到hex
+                        color = rgbToHex(backgroundColor) || color;
+                    }
+                }
+            }
+        }
+        
+        // 创建简化的背景
+        if (color === 'gradient' && gradient) {
+            tempContainer.style.background = gradient;
+        } else {
+            const baseColor = color;
+            const lightColor = adjustColor(baseColor, 40);
+            tempContainer.style.background = `linear-gradient(135deg, ${lightColor} 0%, ${baseColor} 100%)`;
+        }
+        
+        // 添加内容容器
+        const contentWrapper = document.createElement('div');
+        contentWrapper.style.background = 'rgba(255, 255, 255, 0.95)';
+        contentWrapper.style.margin = '20px';
+        contentWrapper.style.padding = '40px';
+        contentWrapper.style.borderRadius = '15px';
+        contentWrapper.style.boxShadow = '0 8px 25px rgba(0, 0, 0, 0.15)';
+        contentWrapper.style.border = '2px solid rgba(255, 255, 255, 0.8)';
+        tempContainer.appendChild(contentWrapper);
+        
+        // 添加装饰心形图案
+        const heartDecor1 = document.createElement('div');
+        heartDecor1.innerHTML = '💖';
+        heartDecor1.style.position = 'absolute';
+        heartDecor1.style.top = '15px';
+        heartDecor1.style.left = '15px';
+        heartDecor1.style.fontSize = '24px';
+        heartDecor1.style.opacity = '0.7';
+        contentWrapper.appendChild(heartDecor1);
+        
+        const heartDecor2 = document.createElement('div');
+        heartDecor2.innerHTML = '💕';
+        heartDecor2.style.position = 'absolute';
+        heartDecor2.style.top = '15px';
+        heartDecor2.style.right = '15px';
+        heartDecor2.style.fontSize = '20px';
+        heartDecor2.style.opacity = '0.7';
+        contentWrapper.appendChild(heartDecor2);
         
         // 添加标题 - 使用自定义情书名称
         const title = document.createElement('h1');
         title.textContent = customLetterTitle;
-        title.style.color = 'var(--book-color)';
         title.style.textAlign = 'center';
-        title.style.fontSize = '32px';
+        title.style.fontSize = '36px';
         title.style.marginBottom = '30px';
-        tempContainer.appendChild(title);
+        title.style.fontWeight = 'bold';
+        title.style.letterSpacing = '2px';
+        
+        // 为标题设置动态颜色效果
+        if (color === 'gradient' && gradient) {
+            // 渐变色：提取主色调
+            const baseColor = extractFirstColorFromGradient(gradient);
+            title.style.color = baseColor;
+            title.style.textShadow = `3px 3px 8px ${adjustColor(baseColor, -40)}60, 0 0 20px ${adjustColor(baseColor, 20)}40`;
+        } else {
+            // 单色：使用主色调
+            title.style.color = color;
+            title.style.textShadow = `3px 3px 8px ${adjustColor(color, -60)}60, 0 0 15px ${adjustColor(color, 20)}30`;
+        }
+        
+        contentWrapper.appendChild(title);
+        
+        // 添加装饰线
+        const decorLine = document.createElement('div');
+        decorLine.style.width = '200px';
+        decorLine.style.height = '4px';
+        if (color === 'gradient' && gradient) {
+            decorLine.style.background = gradient;
+        } else {
+            decorLine.style.background = `linear-gradient(90deg, ${adjustColor(color, 20)}, ${color}, ${adjustColor(color, 20)})`;
+        }
+        decorLine.style.margin = '0 auto 30px auto';
+        decorLine.style.borderRadius = '2px';
+        decorLine.style.opacity = '0.8';
+        contentWrapper.appendChild(decorLine);
         
         // 添加收信人
         const recipient = document.createElement('h2');
@@ -947,54 +1054,102 @@ document.addEventListener('DOMContentLoaded', function() {
             recipientName = '特别的你';
         }
         
-        
         recipient.textContent = recipientName;
-        recipient.style.fontSize = '24px';
-        recipient.style.marginBottom = '20px';
-        recipient.style.color = 'var(--book-color)';
-        tempContainer.appendChild(recipient);
+        recipient.style.fontSize = '28px';
+        recipient.style.marginBottom = '25px';
+        recipient.style.fontWeight = '600';
+        recipient.style.textAlign = 'left';
+        
+        // 为收信人设置颜色效果
+        if (color === 'gradient' && gradient) {
+            const baseColor = extractFirstColorFromGradient(gradient);
+            const recipientColor = adjustColor(baseColor, -10); // 比标题稍微深一点
+            recipient.style.color = recipientColor;
+            recipient.style.textShadow = `2px 2px 6px ${adjustColor(recipientColor, -30)}40`;
+        } else {
+            const recipientColor = adjustColor(color, -10);
+            recipient.style.color = recipientColor;
+            recipient.style.textShadow = `2px 2px 6px ${adjustColor(recipientColor, -40)}40`;
+        }
+        
+        contentWrapper.appendChild(recipient);
         
         // 添加所有段落内容
-        paragraphs.forEach(paragraph => {
+        paragraphs.forEach((paragraph, index) => {
             const p = document.createElement('p');
             p.textContent = paragraph;
-            p.style.marginBottom = '20px';
-            p.style.fontSize = '18px';
+            p.style.marginBottom = '25px';
+            p.style.fontSize = index === 0 ? '22px' : '20px';
             p.style.lineHeight = '1.8';
-            tempContainer.appendChild(p);
+            p.style.textAlign = 'justify';
+            p.style.textIndent = '2em';
+            p.style.color = '#444';
+            p.style.fontWeight = index === 0 ? '500' : 'normal';
+            contentWrapper.appendChild(p);
         });
         
         // 添加署名
         const signature = document.createElement('p');
-        signature.textContent = bookSignature.textContent;
+        signature.textContent = bookSignature.textContent + ' ✨';
         signature.style.textAlign = 'right';
         signature.style.marginTop = '40px';
         signature.style.fontStyle = 'italic';
-        signature.style.fontSize = '24px';
-        signature.style.color = 'var(--book-color)';
-        tempContainer.appendChild(signature);
+        signature.style.fontSize = '26px';
+        signature.style.fontWeight = 'bold';
+        
+        // 为署名设置颜色效果
+        if (color === 'gradient' && gradient) {
+            const baseColor = extractFirstColorFromGradient(gradient);
+            const signatureColor = adjustColor(baseColor, 10); // 比标题稍微亮一点
+            signature.style.color = signatureColor;
+            signature.style.textShadow = `2px 2px 6px ${adjustColor(signatureColor, -50)}50, 0 0 12px ${adjustColor(signatureColor, 30)}30`;
+        } else {
+            const signatureColor = adjustColor(color, 10);
+            signature.style.color = signatureColor;
+            signature.style.textShadow = `2px 2px 6px ${adjustColor(signatureColor, -50)}50, 0 0 12px ${adjustColor(signatureColor, 30)}30`;
+        }
+        
+        contentWrapper.appendChild(signature);
         
         // 添加页脚
         const footer = document.createElement('div');
         footer.style.marginTop = '50px';
-        footer.style.borderTop = '1px solid #eee';
         footer.style.paddingTop = '20px';
         footer.style.textAlign = 'center';
-        footer.style.color = '#888';
-        footer.style.fontSize = '14px';
-        footer.textContent = '制作于 ' + new Date().toLocaleDateString();
-        tempContainer.appendChild(footer);
+        footer.style.fontSize = '16px';
+        footer.style.fontStyle = 'italic';
+        
+        // 为页脚设置颜色效果
+        if (color === 'gradient' && gradient) {
+            const baseColor = extractFirstColorFromGradient(gradient);
+            const footerColor = adjustColor(baseColor, -30);
+            footer.style.color = footerColor;
+            footer.style.borderTop = `1px solid ${adjustColor(baseColor, 50)}`;
+        } else {
+            const footerColor = adjustColor(color, -30);
+            footer.style.color = footerColor;
+            footer.style.borderTop = `1px solid ${adjustColor(color, 50)}`;
+        }
+        
+        footer.innerHTML = '🌟 用心制作于 ' + new Date().toLocaleDateString() + ' 🌟';
+        contentWrapper.appendChild(footer);
         
         // 将临时容器添加到文档中（不可见）
         tempContainer.style.position = 'absolute';
         tempContainer.style.left = '-9999px';
+        tempContainer.style.top = '0';
         document.body.appendChild(tempContainer);
         
         // 使用html2canvas生成图片
         html2canvas(tempContainer, {
             scale: 2,
             useCORS: true,
-            backgroundColor: '#ffffff'
+            backgroundColor: '#ffffff',
+            allowTaint: false,
+            foreignObjectRendering: false,
+            logging: true,
+            width: tempContainer.offsetWidth,
+            height: tempContainer.offsetHeight
         }).then(canvas => {
             // 显示预览
             imagePreview.src = canvas.toDataURL('image/png');
@@ -1032,6 +1187,12 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // 从DOM中移除临时容器
             document.body.removeChild(tempContainer);
+        }).catch(error => {
+            console.error('生成图片失败:', error);
+            alert('生成图片失败，请稍后重试');
+            if (document.body.contains(tempContainer)) {
+                document.body.removeChild(tempContainer);
+            }
         });
     }
     
@@ -1040,18 +1201,118 @@ document.addEventListener('DOMContentLoaded', function() {
         // 创建一个临时容器来放置完整内容
         const tempContainer = document.createElement('div');
         tempContainer.style.width = '800px';
-        tempContainer.style.padding = '40px';
-        tempContainer.style.backgroundColor = 'white';
+        tempContainer.style.padding = '50px';
+        tempContainer.style.position = 'relative';
         tempContainer.style.fontFamily = "'Microsoft YaHei', '微软雅黑', sans-serif";
+        tempContainer.style.color = '#333';
+        tempContainer.style.lineHeight = '1.6';
+        
+        // 获取当前应用的颜色 - 优先使用全局变量
+        let color = currentColor;
+        let gradient = currentGradient;
+        
+        console.log('查看图片时获取的颜色信息:', { currentColor, currentGradient, color, gradient });
+        
+        // 如果全局变量没有值，尝试从页面元素中获取
+        if (!color || color === '#e74c3c') {
+            // 尝试从CSS变量中获取书籍颜色
+            const bookColor = getComputedStyle(document.documentElement).getPropertyValue('--book-color').trim();
+            if (bookColor) {
+                color = bookColor;
+            } else {
+                // 尝试从信封前面获取颜色
+                const envelopeFront = document.querySelector('.front');
+                if (envelopeFront) {
+                    const frontStyle = window.getComputedStyle(envelopeFront);
+                    const backgroundColor = frontStyle.backgroundColor;
+                    const backgroundImage = frontStyle.backgroundImage;
+                    
+                    if (backgroundImage && backgroundImage !== 'none') {
+                        // 如果是渐变背景
+                        gradient = backgroundImage;
+                        color = 'gradient';
+                    } else if (backgroundColor && backgroundColor !== 'rgba(0, 0, 0, 0)' && backgroundColor !== 'transparent') {
+                        // 如果是单色背景，转换rgb到hex
+                        color = rgbToHex(backgroundColor) || color;
+                    }
+                }
+            }
+        }
+        
+        // 创建简化的背景
+        if (color === 'gradient' && gradient) {
+            tempContainer.style.background = gradient;
+        } else {
+            const baseColor = color;
+            const lightColor = adjustColor(baseColor, 40);
+            tempContainer.style.background = `linear-gradient(135deg, ${lightColor} 0%, ${baseColor} 100%)`;
+        }
+        
+        // 添加内容容器
+        const contentWrapper = document.createElement('div');
+        contentWrapper.style.background = 'rgba(255, 255, 255, 0.95)';
+        contentWrapper.style.margin = '20px';
+        contentWrapper.style.padding = '40px';
+        contentWrapper.style.borderRadius = '15px';
+        contentWrapper.style.boxShadow = '0 8px 25px rgba(0, 0, 0, 0.15)';
+        contentWrapper.style.border = '2px solid rgba(255, 255, 255, 0.8)';
+        tempContainer.appendChild(contentWrapper);
+        
+        // 添加装饰心形图案
+        const heartDecor1 = document.createElement('div');
+        heartDecor1.innerHTML = '💖';
+        heartDecor1.style.position = 'absolute';
+        heartDecor1.style.top = '15px';
+        heartDecor1.style.left = '15px';
+        heartDecor1.style.fontSize = '24px';
+        heartDecor1.style.opacity = '0.7';
+        contentWrapper.appendChild(heartDecor1);
+        
+        const heartDecor2 = document.createElement('div');
+        heartDecor2.innerHTML = '💕';
+        heartDecor2.style.position = 'absolute';
+        heartDecor2.style.top = '15px';
+        heartDecor2.style.right = '15px';
+        heartDecor2.style.fontSize = '20px';
+        heartDecor2.style.opacity = '0.7';
+        contentWrapper.appendChild(heartDecor2);
         
         // 添加标题 - 使用自定义情书名称
         const title = document.createElement('h1');
         title.textContent = customLetterTitle;
-        title.style.color = 'var(--book-color)';
         title.style.textAlign = 'center';
-        title.style.fontSize = '32px';
+        title.style.fontSize = '36px';
         title.style.marginBottom = '30px';
-        tempContainer.appendChild(title);
+        title.style.fontWeight = 'bold';
+        title.style.letterSpacing = '2px';
+        
+        // 为标题设置动态颜色效果
+        if (color === 'gradient' && gradient) {
+            // 渐变色：提取主色调
+            const baseColor = extractFirstColorFromGradient(gradient);
+            title.style.color = baseColor;
+            title.style.textShadow = `3px 3px 8px ${adjustColor(baseColor, -40)}60, 0 0 20px ${adjustColor(baseColor, 20)}40`;
+        } else {
+            // 单色：使用主色调
+            title.style.color = color;
+            title.style.textShadow = `3px 3px 8px ${adjustColor(color, -60)}60, 0 0 15px ${adjustColor(color, 20)}30`;
+        }
+        
+        contentWrapper.appendChild(title);
+        
+        // 添加装饰线
+        const decorLine = document.createElement('div');
+        decorLine.style.width = '200px';
+        decorLine.style.height = '4px';
+        if (color === 'gradient' && gradient) {
+            decorLine.style.background = gradient;
+        } else {
+            decorLine.style.background = `linear-gradient(90deg, ${adjustColor(color, 20)}, ${color}, ${adjustColor(color, 20)})`;
+        }
+        decorLine.style.margin = '0 auto 30px auto';
+        decorLine.style.borderRadius = '2px';
+        decorLine.style.opacity = '0.8';
+        contentWrapper.appendChild(decorLine);
         
         // 添加收信人
         const recipient = document.createElement('h2');
@@ -1068,52 +1329,101 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         recipient.textContent = recipientName;
-        recipient.style.fontSize = '24px';
-        recipient.style.marginBottom = '20px';
-        recipient.style.color = 'var(--book-color)';
-        tempContainer.appendChild(recipient);
+        recipient.style.fontSize = '28px';
+        recipient.style.marginBottom = '25px';
+        recipient.style.fontWeight = '600';
+        recipient.style.textAlign = 'left';
+        
+        // 为收信人设置颜色效果
+        if (color === 'gradient' && gradient) {
+            const baseColor = extractFirstColorFromGradient(gradient);
+            const recipientColor = adjustColor(baseColor, -10); // 比标题稍微深一点
+            recipient.style.color = recipientColor;
+            recipient.style.textShadow = `2px 2px 6px ${adjustColor(recipientColor, -30)}40`;
+        } else {
+            const recipientColor = adjustColor(color, -10);
+            recipient.style.color = recipientColor;
+            recipient.style.textShadow = `2px 2px 6px ${adjustColor(recipientColor, -40)}40`;
+        }
+        
+        contentWrapper.appendChild(recipient);
         
         // 添加所有段落内容
-        paragraphs.forEach(paragraph => {
+        paragraphs.forEach((paragraph, index) => {
             const p = document.createElement('p');
             p.textContent = paragraph;
-            p.style.marginBottom = '20px';
-            p.style.fontSize = '18px';
+            p.style.marginBottom = '25px';
+            p.style.fontSize = index === 0 ? '22px' : '20px';
             p.style.lineHeight = '1.8';
-            tempContainer.appendChild(p);
+            p.style.textAlign = 'justify';
+            p.style.textIndent = '2em';
+            p.style.color = '#444';
+            p.style.fontWeight = index === 0 ? '500' : 'normal';
+            contentWrapper.appendChild(p);
         });
         
         // 添加署名
         const signature = document.createElement('p');
-        signature.textContent = bookSignature.textContent;
+        signature.textContent = bookSignature.textContent + ' ✨';
         signature.style.textAlign = 'right';
         signature.style.marginTop = '40px';
         signature.style.fontStyle = 'italic';
-        signature.style.fontSize = '24px';
-        signature.style.color = 'var(--book-color)';
-        tempContainer.appendChild(signature);
+        signature.style.fontSize = '26px';
+        signature.style.fontWeight = 'bold';
+        
+        // 为署名设置颜色效果
+        if (color === 'gradient' && gradient) {
+            const baseColor = extractFirstColorFromGradient(gradient);
+            const signatureColor = adjustColor(baseColor, 10); // 比标题稍微亮一点
+            signature.style.color = signatureColor;
+            signature.style.textShadow = `2px 2px 6px ${adjustColor(signatureColor, -50)}50, 0 0 12px ${adjustColor(signatureColor, 30)}30`;
+        } else {
+            const signatureColor = adjustColor(color, 10);
+            signature.style.color = signatureColor;
+            signature.style.textShadow = `2px 2px 6px ${adjustColor(signatureColor, -50)}50, 0 0 12px ${adjustColor(signatureColor, 30)}30`;
+        }
+        
+        contentWrapper.appendChild(signature);
         
         // 添加页脚
         const footer = document.createElement('div');
         footer.style.marginTop = '50px';
-        footer.style.borderTop = '1px solid #eee';
         footer.style.paddingTop = '20px';
         footer.style.textAlign = 'center';
-        footer.style.color = '#888';
-        footer.style.fontSize = '14px';
-        footer.textContent = '制作于 ' + new Date().toLocaleDateString();
-        tempContainer.appendChild(footer);
+        footer.style.fontSize = '16px';
+        footer.style.fontStyle = 'italic';
+        
+        // 为页脚设置颜色效果
+        if (color === 'gradient' && gradient) {
+            const baseColor = extractFirstColorFromGradient(gradient);
+            const footerColor = adjustColor(baseColor, -30);
+            footer.style.color = footerColor;
+            footer.style.borderTop = `1px solid ${adjustColor(baseColor, 50)}`;
+        } else {
+            const footerColor = adjustColor(color, -30);
+            footer.style.color = footerColor;
+            footer.style.borderTop = `1px solid ${adjustColor(color, 50)}`;
+        }
+        
+        footer.innerHTML = '🌟 用心制作于 ' + new Date().toLocaleDateString() + ' 🌟';
+        contentWrapper.appendChild(footer);
         
         // 将临时容器添加到文档中（不可见）
         tempContainer.style.position = 'absolute';
         tempContainer.style.left = '-9999px';
+        tempContainer.style.top = '0';
         document.body.appendChild(tempContainer);
         
         // 使用html2canvas生成图片
         html2canvas(tempContainer, {
             scale: 2,
             useCORS: true,
-            backgroundColor: '#ffffff'
+            backgroundColor: '#ffffff',
+            allowTaint: false,
+            foreignObjectRendering: false,
+            logging: true,
+            width: tempContainer.offsetWidth,
+            height: tempContainer.offsetHeight
         }).then(canvas => {
             // 显示预览
             imagePreview.src = canvas.toDataURL('image/png');
@@ -1129,6 +1439,12 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // 从DOM中移除临时容器
             document.body.removeChild(tempContainer);
+        }).catch(error => {
+            console.error('生成图片失败:', error);
+            alert('生成图片失败，请稍后重试');
+            if (document.body.contains(tempContainer)) {
+                document.body.removeChild(tempContainer);
+            }
         });
     }
     
@@ -1502,6 +1818,41 @@ document.addEventListener('DOMContentLoaded', function() {
         } : null;
     }
     
+    // RGB转十六进制颜色
+    function rgbToHex(rgb) {
+        if (!rgb || rgb === 'transparent' || rgb === 'rgba(0, 0, 0, 0)') return null;
+        
+        // 解析 rgb(r, g, b) 或 rgba(r, g, b, a) 格式
+        const match = rgb.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*[\d.]+)?\)/);
+        if (!match) return null;
+        
+        const r = parseInt(match[1]);
+        const g = parseInt(match[2]);
+        const b = parseInt(match[3]);
+        
+        return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+    }
+    
+    // 从渐变中提取第一个颜色
+    function extractFirstColorFromGradient(gradient) {
+        if (!gradient) return '#e74c3c';
+        
+        // 匹配渐变中的第一个十六进制颜色
+        const hexMatch = gradient.match(/#[a-fA-F0-9]{6}/);
+        if (hexMatch) return hexMatch[0];
+        
+        // 匹配渐变中的第一个rgb颜色
+        const rgbMatch = gradient.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*[\d.]+)?\)/);
+        if (rgbMatch) {
+            const r = parseInt(rgbMatch[1]);
+            const g = parseInt(rgbMatch[2]);
+            const b = parseInt(rgbMatch[3]);
+            return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+        }
+        
+        return '#e74c3c'; // 默认颜色
+    }
+    
     // 打开花朵内容面板
     function openFlowerContent(petalIndex = 0) {
         console.log('打开花朵内容面板', petalIndex);
@@ -1670,7 +2021,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (signatureEl) signatureEl.style.color = envelopeColor;
         
         // 设置书籍元素颜色
-        if (useBookMode) {
+        if (useBookMode || useFlowerMode) {
             document.documentElement.style.setProperty('--book-color', envelopeColor);
             document.documentElement.style.setProperty('--book-color-dark', darkerColor);
             
@@ -1714,7 +2065,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (signatureEl) signatureEl.style.color = baseColor;
         
         // 设置书籍元素渐变色
-        if (useBookMode) {
+        if (useBookMode || useFlowerMode) {
             document.documentElement.style.setProperty('--book-color', baseColor);
             document.documentElement.style.setProperty('--book-color-dark', adjustColor(baseColor, -30));
             

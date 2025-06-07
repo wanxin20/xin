@@ -51,11 +51,17 @@
         }
         
         .color-picker {
-            display: flex;
-            gap: 10px;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(30px, 1fr));
+            gap: 8px;
             margin-top: 10px;
-            flex-wrap: wrap;
             max-width: 100%;
+            max-height: 300px;
+            overflow-y: auto;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #fafafa;
         }
         
         .color-option {
@@ -67,6 +73,7 @@
             position: relative;
             transition: all 0.3s ease;
             flex-shrink: 0;
+            justify-self: center;
         }
         
         .color-option:hover {
@@ -638,6 +645,39 @@
             margin-bottom: 5px;
             color: #e67e22;
         }
+        
+        /* 移动端适配 */
+        @media (max-width: 768px) {
+            .color-picker {
+                grid-template-columns: repeat(auto-fill, minmax(28px, 1fr));
+                gap: 6px;
+                max-height: 250px;
+                padding: 8px;
+            }
+            
+            .color-option {
+                width: 28px;
+                height: 28px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .color-picker {
+                grid-template-columns: repeat(auto-fill, minmax(25px, 1fr));
+                gap: 5px;
+                max-height: 200px;
+                padding: 6px;
+            }
+            
+            .color-option {
+                width: 25px;
+                height: 25px;
+            }
+            
+            .color-option.selected::after {
+                font-size: 12px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -746,7 +786,25 @@
             <div class="color-option" style="background-color: #d35400;" data-color="#d35400" title="深橙色"></div>
             <div class="color-option" style="background-color: #c0392b;" data-color="#c0392b" title="深红色"></div>
             
-            <!-- 渐变色选项 -->
+            <!-- 更多单色 -->
+            <div class="color-option" style="background-color: #ff1744;" data-color="#ff1744" title="玫瑰红"></div>
+            <div class="color-option" style="background-color: #e91e63;" data-color="#e91e63" title="粉红色"></div>
+            <div class="color-option" style="background-color: #673ab7;" data-color="#673ab7" title="深紫色"></div>
+            <div class="color-option" style="background-color: #3f51b5;" data-color="#3f51b5" title="靛蓝色"></div>
+            <div class="color-option" style="background-color: #2196f3;" data-color="#2196f3" title="蓝色"></div>
+            <div class="color-option" style="background-color: #00bcd4;" data-color="#00bcd4" title="青色"></div>
+            <div class="color-option" style="background-color: #009688;" data-color="#009688" title="青绿色"></div>
+            <div class="color-option" style="background-color: #4caf50;" data-color="#4caf50" title="绿色"></div>
+            <div class="color-option" style="background-color: #8bc34a;" data-color="#8bc34a" title="浅绿色"></div>
+            <div class="color-option" style="background-color: #cddc39;" data-color="#cddc39" title="柠檬绿"></div>
+            <div class="color-option" style="background-color: #ffeb3b;" data-color="#ffeb3b" title="黄色"></div>
+            <div class="color-option" style="background-color: #ffc107;" data-color="#ffc107" title="琥珀色"></div>
+            <div class="color-option" style="background-color: #ff9800;" data-color="#ff9800" title="橙色"></div>
+            <div class="color-option" style="background-color: #ff5722;" data-color="#ff5722" title="深橙色"></div>
+            <div class="color-option" style="background-color: #795548;" data-color="#795548" title="棕色"></div>
+            <div class="color-option" style="background-color: #607d8b;" data-color="#607d8b" title="蓝灰色"></div>
+            
+            <!-- 经典渐变色选项 -->
             <div class="color-option" style="background: linear-gradient(135deg, #ff6b6b, #feca57);" 
                  data-color="gradient" data-gradient="linear-gradient(135deg, #ff6b6b, #feca57)" title="日落渐变"></div>
             <div class="color-option" style="background: linear-gradient(135deg, #a8edea, #fed6e3);" 
@@ -767,6 +825,56 @@
                  data-color="gradient" data-gradient="linear-gradient(135deg, #ff8a80, #ff80ab)" title="珊瑚渐变"></div>
             <div class="color-option" style="background: linear-gradient(135deg, #b19cd9, #c9a9e8);" 
                  data-color="gradient" data-gradient="linear-gradient(135deg, #b19cd9, #c9a9e8)" title="薰衣草渐变"></div>
+            
+            <!-- 新增炫彩渐变色 -->
+            <div class="color-option" style="background: linear-gradient(135deg, #ff0844, #ffb199);" 
+                 data-color="gradient" data-gradient="linear-gradient(135deg, #ff0844, #ffb199)" title="火焰渐变"></div>
+            <div class="color-option" style="background: linear-gradient(135deg, #654ea3, #eaafc8);" 
+                 data-color="gradient" data-gradient="linear-gradient(135deg, #654ea3, #eaafc8)" title="紫粉渐变"></div>
+            <div class="color-option" style="background: linear-gradient(135deg, #009ffd, #2a2a72);" 
+                 data-color="gradient" data-gradient="linear-gradient(135deg, #009ffd, #2a2a72)" title="深海渐变"></div>
+            <div class="color-option" style="background: linear-gradient(135deg, #f093fb, #f5576c, #f093fb);" 
+                 data-color="gradient" data-gradient="linear-gradient(135deg, #f093fb, #f5576c, #f093fb)" title="三色渐变"></div>
+            <div class="color-option" style="background: linear-gradient(135deg, #ffecd2, #fcb69f);" 
+                 data-color="gradient" data-gradient="linear-gradient(135deg, #ffecd2, #fcb69f)" title="暖阳渐变"></div>
+            <div class="color-option" style="background: linear-gradient(135deg, #a8edea, #fed6e3, #d299c2);" 
+                 data-color="gradient" data-gradient="linear-gradient(135deg, #a8edea, #fed6e3, #d299c2)" title="彩虹渐变"></div>
+            <div class="color-option" style="background: linear-gradient(135deg, #ff9a9e, #fad0c4, #ffd1ff);" 
+                 data-color="gradient" data-gradient="linear-gradient(135deg, #ff9a9e, #fad0c4, #ffd1ff)" title="粉色三重奏"></div>
+            <div class="color-option" style="background: linear-gradient(135deg, #667eea, #764ba2, #f093fb);" 
+                 data-color="gradient" data-gradient="linear-gradient(135deg, #667eea, #764ba2, #f093fb)" title="紫色三重奏"></div>
+            <div class="color-option" style="background: linear-gradient(135deg, #4facfe, #00f2fe, #43e97b);" 
+                 data-color="gradient" data-gradient="linear-gradient(135deg, #4facfe, #00f2fe, #43e97b)" title="蓝绿三重奏"></div>
+            <div class="color-option" style="background: linear-gradient(135deg, #fa709a, #fee140, #fa709a);" 
+                 data-color="gradient" data-gradient="linear-gradient(135deg, #fa709a, #fee140, #fa709a)" title="黄粉三重奏"></div>
+            
+            <!-- 新增霓虹渐变 -->
+            <div class="color-option" style="background: linear-gradient(135deg, #ff006e, #8338ec, #3a86ff);" 
+                 data-color="gradient" data-gradient="linear-gradient(135deg, #ff006e, #8338ec, #3a86ff)" title="霓虹渐变"></div>
+            <div class="color-option" style="background: linear-gradient(135deg, #ff7b00, #ff8500, #ff006e);" 
+                 data-color="gradient" data-gradient="linear-gradient(135deg, #ff7b00, #ff8500, #ff006e)" title="火焰霓虹"></div>
+            <div class="color-option" style="background: linear-gradient(135deg, #00f5ff, #0080ff, #8000ff);" 
+                 data-color="gradient" data-gradient="linear-gradient(135deg, #00f5ff, #0080ff, #8000ff)" title="冰蓝霓虹"></div>
+            <div class="color-option" style="background: linear-gradient(135deg, #00ff88, #00ff00, #88ff00);" 
+                 data-color="gradient" data-gradient="linear-gradient(135deg, #00ff88, #00ff00, #88ff00)" title="绿色霓虹"></div>
+            
+            <!-- 新增金属质感渐变 -->
+            <div class="color-option" style="background: linear-gradient(135deg, #ffd700, #ffed4e, #fff200);" 
+                 data-color="gradient" data-gradient="linear-gradient(135deg, #ffd700, #ffed4e, #fff200)" title="黄金渐变"></div>
+            <div class="color-option" style="background: linear-gradient(135deg, #c0c0c0, #e8e8e8, #b8b8b8);" 
+                 data-color="gradient" data-gradient="linear-gradient(135deg, #c0c0c0, #e8e8e8, #b8b8b8)" title="银色渐变"></div>
+            <div class="color-option" style="background: linear-gradient(135deg, #cd7f32, #e6a85c, #d4af37);" 
+                 data-color="gradient" data-gradient="linear-gradient(135deg, #cd7f32, #e6a85c, #d4af37)" title="青铜渐变"></div>
+            
+            <!-- 新增宝石色渐变 -->
+            <div class="color-option" style="background: linear-gradient(135deg, #e60026, #ff0040, #cc0033);" 
+                 data-color="gradient" data-gradient="linear-gradient(135deg, #e60026, #ff0040, #cc0033)" title="红宝石"></div>
+            <div class="color-option" style="background: linear-gradient(135deg, #0033cc, #0066ff, #003399);" 
+                 data-color="gradient" data-gradient="linear-gradient(135deg, #0033cc, #0066ff, #003399)" title="蓝宝石"></div>
+            <div class="color-option" style="background: linear-gradient(135deg, #00cc66, #00ff80, #009955);" 
+                 data-color="gradient" data-gradient="linear-gradient(135deg, #00cc66, #00ff80, #009955)" title="绿宝石"></div>
+            <div class="color-option" style="background: linear-gradient(135deg, #cc00cc, #ff00ff, #990099);" 
+                 data-color="gradient" data-gradient="linear-gradient(135deg, #cc00cc, #ff00ff, #990099)" title="紫水晶"></div>
         </div>
     </div>
     
