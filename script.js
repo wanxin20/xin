@@ -926,7 +926,7 @@ document.addEventListener('DOMContentLoaded', function() {
     function generateCompleteImage() {
         // 创建一个临时容器来放置完整内容
         const tempContainer = document.createElement('div');
-        tempContainer.style.width = '800px';
+        tempContainer.style.width = '1000px';
         tempContainer.style.padding = '50px';
         tempContainer.style.position = 'relative';
         tempContainer.style.fontFamily = "'Microsoft YaHei', '微软雅黑', sans-serif";
@@ -1200,7 +1200,7 @@ document.addEventListener('DOMContentLoaded', function() {
     function generateCompleteImageForView() {
         // 创建一个临时容器来放置完整内容
         const tempContainer = document.createElement('div');
-        tempContainer.style.width = '800px';
+        tempContainer.style.width = '1000px';
         tempContainer.style.padding = '50px';
         tempContainer.style.position = 'relative';
         tempContainer.style.fontFamily = "'Microsoft YaHei', '微软雅黑', sans-serif";
